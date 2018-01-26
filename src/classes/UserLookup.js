@@ -9,12 +9,12 @@ export class UserLookup {
 
 	get(id) {
 		let p = new Promise((res, rej) => {
-		if(this.store[id]) {
+			if(this.store[id]) {
 				res(this.store[id]);
-		} else {
+			} else {
 				$.ajax({
-					url: this.uri + "/" + id,
-					headers: {"Authorization": "Bearer " + this.token},
+					url: this.uri + '/' + id,
+					headers: {'Authorization': 'Bearer ' + this.token},
 					success: (data) => {
 						this.store.id = data;
 						res(data);

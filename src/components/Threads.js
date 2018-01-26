@@ -7,20 +7,20 @@ export class Threads extends Component {
 		super(props);
 		this.state = {
 			threads: []
-		}
+		};
 	}
 
 	componentWillMount() {
 		$.ajax({
-			url: "http://localhost:8080/secure/threads",
-			headers: {"Authorization": "Bearer " + this.props.token},
+			url: 'http://localhost:8080/secure/threads',
+			headers: {'Authorization': 'Bearer ' + this.props.token},
 			success: (data) => {
 				this.setState({threads: data});
 			}
 		});
 	}
 
-  render() {
+	render() {
 
 		let threads = this.state.threads.map((thread, index) =>
 			<li key={index} onClick={() => this.props.selectThread(thread)}>
@@ -28,12 +28,12 @@ export class Threads extends Component {
 			</li>
 		);
 
-    return (
-      <div>
+		return (
+			<div>
 				<ul>
-				{threads}
+					{threads}
 				</ul>
 			</div>
-    );
-  }
+		);
+	}
 }
