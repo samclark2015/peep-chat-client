@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import $ from 'jquery';
-const settings = require('../settings.json');
+const settings = require('../api-config.js');
 
 export class Login extends Component {
 	login(event) {
@@ -14,6 +14,8 @@ export class Login extends Component {
 		});
 		event.preventDefault();
 	}
+
+	
 
 	render() {
 		return (

@@ -4,7 +4,7 @@ import { UserLabel } from './UserLabel.js';
 import { ThreadBox } from './ThreadBox.js';
 import { NewThread } from './NewThread.js';
 import '../stylesheets/Threads.css';
-const settings = require('../settings.json');
+const settings = require('../api-config.js');
 
 
 export class Threads extends Component {
@@ -20,12 +20,21 @@ export class Threads extends Component {
 		this.loadThreads();
 	}
 
+	componentDidMount() {
+	}
+
 	loadThreads() {
 		$.ajax({
 			url: settings.serverUrl + '/secure/threads',
 			headers: {'Authorization': 'Bearer ' + this.props.token},
 			success: (data) => {
 				this.setState({threads: data});
+				let id = localStorage.getItem('last-thread');
+				if(id) {
+					this.props.selectThread(id);
+				} else {
+					this.props.selectThread(this.state.threads[0]._id);
+				}
 			}
 		});
 	}
@@ -40,14 +49,22 @@ export class Threads extends Component {
 		this.props.selectThread(id);
 	}
 
+	handleSelect(id) {
+		localStorage.setItem('last-thread', id);
+		this.props.selectThread(id);
+	}
+
 	render() {
-		let threads = this.state.threads.map((thread, index) =>
-			<ThreadBox
-				key={index}
-				onClick={() => this.props.selectThread(thread._id)}
-				title={<UserLabel lookup={this.props.lookup} ids={thread.members} />}
-				subtitle="" />
-		);
+		let threads = this.state.threads.map((thread, index) => {
+			let names = thread.members.map((m) => m.name);
+			return (
+				<ThreadBox
+					key={index}
+					onClick={() => this.handleSelect(thread._id)}
+					title={names.join(', ')}
+					subtitle="" />
+			);
+		});
 
 		return (
 			<div className="threadContainer">

@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import React, { Component } from 'react';
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input, Tooltip } from 'reactstrap';
-const settings = require('../settings.json');
+const settings = require('../api-config.js');
 
 export class NewThread extends Component {
 	constructor(props) {

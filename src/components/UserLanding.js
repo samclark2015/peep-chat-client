@@ -9,7 +9,7 @@ import { UserLookup } from '../classes/UserLookup.js';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 
-const settings = require('../settings.json');
+const settings = require('../api-config.js');
 
 export class UserLanding extends Component {
 	constructor(props) {
@@ -48,9 +48,32 @@ export class UserLanding extends Component {
 
 		ws.listeners.push((message) => {
 			if(message.type === 'typing') {
-				console.log(message);
+				return;
+			} else if(message.type === 'message') {
+				if (!('Notification' in window)) {
+					alert('This browser does not support system notifications');
+				}
+
+				// Let's check whether notification permissions have already been granted
+				else if (Notification.permission === 'granted') {
+					// If it's okay let's create a notification
+					let text = 'New message from ' + message.payload.sender.name;
+					var notification = new Notification(text);
+				}
+
+				// Otherwise, we need to ask the user for permission
+				else if (Notification.permission !== 'denied') {
+					Notification.requestPermission(function (permission) {
+						// If the user accepts, let's create a notification
+						if (permission === 'granted') {
+							var notification = new Notification('Hi there!');
+						}
+					});
+				}
+
 			}
 		});
+
 
 		this.setState({ ws: ws });
 	}

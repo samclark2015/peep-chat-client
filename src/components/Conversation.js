@@ -7,7 +7,7 @@ import { Message } from '../classes/Message.js';
 import { InputGroup, InputGroupAddon, Button, Input } from 'reactstrap';
 import '../stylesheets/Conversation.css';
 import 'animate.css';
-const settings = require('../settings.json');
+const settings = require('../api-config.js');
 
 export class Conversation extends Component {
 	constructor(props) {
@@ -35,8 +35,8 @@ export class Conversation extends Component {
 				var thread = Object.assign({}, this.state.thread);
 				thread.messages.push(message.payload);
 				this.setState({typing: null, thread: thread});
-				this.scrollToBottom();
 			}
+			this.scrollToBottom();
 		});
 	}
 
@@ -46,7 +46,6 @@ export class Conversation extends Component {
 				url: settings.serverUrl + '/secure/threads/'+next.thread,
 				headers: {'Authorization': 'Bearer ' + this.props.data.user.token},
 				success: (data) => {
-					console.log(data);
 					this.setState({
 						thread: data
 					});
@@ -57,7 +56,8 @@ export class Conversation extends Component {
 	}
 
 	scrollToBottom() {
-		this.anchor.scrollIntoView({ behavior: 'smooth' });
+		if(this.anchor)
+			this.anchor.scrollIntoView({ behavior: 'smooth' });
 	}
 
 	handleChange(event) {
@@ -87,17 +87,16 @@ export class Conversation extends Component {
 		if(this.state.thread) {
 			let listItems = this.state.thread.messages.map((message, idx) => {
 				var style = {};
-				if(message.sender == this.props.data.user._id) {
+				if(message.sender._id == this.props.data.user._id) {
 					style.backgroundColor = '#b5c1c9';
 					style.float = 'right';
-					//style.textAlign = 'right';
 				}
 				return (
 					<div className="messageRow" key={idx}>
 						<MessageBubble
 							style={style}
 							className="messageBubble"
-							sender={<UserLabel lookup={this.props.data.lookup} ids={[message.sender]} />}
+							sender={message.sender.name}
 							content={message.content} />
 					</div>
 				);
@@ -112,17 +111,19 @@ export class Conversation extends Component {
 						<div className="messsageRow">
 							<MessageBubble
 								className="messageBubble animated infinite pulse"
-								sender={<UserLabel lookup={this.props.data.lookup} ids={[this.state.typing.sender]} />}
+								sender={this.state.typing.sender.name}
 								content={this.state.typing.content} />
 						</div>
 					);
 			};
 
+			let names = this.state.thread.members.map((m) => m.name);
+
 			return (
 				<div className="conversation">
 					<div className="headerRow">
 						<h5>
-							<UserLabel lookup={this.props.data.lookup} ids={this.state.thread.members} />
+							{names.join(', ')}
 						</h5>
 					</div>
 
