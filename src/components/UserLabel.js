@@ -9,14 +9,12 @@ export class UserLabel extends Component {
 	}
 
 	componentWillMount() {
-		var label = '';
 		let promises = this.props.ids.map((m) =>
 			this.props.lookup.get(m)
 		);
 		Promise.all(promises).then((users) => {
-			users.forEach((user) => {
-				label += user.username + ', ';
-			});
+			let names = users.map((u) => u.name);
+			let label = names.join(', ');
 			this.setState({label: label});
 		});
 	}

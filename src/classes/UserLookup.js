@@ -18,6 +18,9 @@ export class UserLookup {
 					success: (data) => {
 						this.store.id = data;
 						res(data);
+					},
+					error: (err, text) => {
+						rej(err, text);
 					}
 				});
 			}

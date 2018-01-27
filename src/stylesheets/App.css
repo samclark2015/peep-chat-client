@@ -22,6 +22,12 @@
   font-size: large;
 }
 
+.container {
+	overflow: hidden;
+	min-height: 100Vh;
+	max-height: 100Vh;
+}
+
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

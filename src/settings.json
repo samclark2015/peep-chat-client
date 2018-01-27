@@ -1,0 +1,4 @@
+{
+	"serverUrl": "https://peep-chat.herokuapp.com/api",
+	"wsUrl": "wss://peep-chat.herokuapp.com/api/ws"
+}

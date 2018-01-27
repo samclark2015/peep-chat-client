@@ -1,0 +1,24 @@
+.userLandingContainer {
+	height: 100Vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.userLandingContentRow {
+	display: flex;
+	flex-direction: row;
+	height: 100%;
+}
+
+.userLandingHeaderRow {
+	border-bottom: 1px solid grey;
+}
+
+.userLandingThreadCol {
+	width: 20%;
+	border-right: 1px solid grey;
+}
+
+.userLandingConvoCol {
+	width: 80%;
+}

@@ -1,6 +1,13 @@
-import React, { Component } from 'react';
+import $ from 'jquery';
 import _ from 'lodash';
+import React, { Component } from 'react';
 import { UserLabel } from './UserLabel.js';
+import { MessageBubble } from './MessageBubble.js';
+import { Message } from '../classes/Message.js';
+import { InputGroup, InputGroupAddon, Button, Input } from 'reactstrap';
+import '../stylesheets/Conversation.css';
+import 'animate.css';
+const settings = require('../settings.json');
 
 export class Conversation extends Component {
 	constructor(props) {
@@ -8,7 +15,8 @@ export class Conversation extends Component {
 		this.state = {
 			members: [],
 			messageValue: '',
-			typing: null
+			typing: null,
+			thread: null
 		};
 
 		this.handleChange = this.handleChange.bind(this);
@@ -16,61 +24,128 @@ export class Conversation extends Component {
 	}
 
 	componentDidMount() {
-		this.props.ws.listeners.push((message) => {
-			if(message.type === 'typing' && message.to === this.props.thread.recipient) {
-				this.setState({typing: message.payload});
-			} else if(message.type === 'message' && message.to === this.props.thread.recipient) {
-				this.setState({typing: null});
+		// TODO: delete fn on unmount
+		this.props.data.ws.listeners.push((message) => {
+			if(message.type === 'typing' && message.payload.thread === this.props.thread) {
+				if(message.payload.content === '')
+					this.setState({typing: message.null});
+				else
+					this.setState({typing: message.payload});
+			} else if(message.type === 'message' && message.payload.thread === this.props.thread) {
+				var thread = Object.assign({}, this.state.thread);
+				thread.messages.push(message.payload);
+				this.setState({typing: null, thread: thread});
+				this.scrollToBottom();
 			}
 		});
 	}
 
+	componentWillReceiveProps(next) {
+		if(next.thread && next.thread !== this.props.thread) {
+			$.ajax({
+				url: settings.serverUrl + '/secure/threads/'+next.thread,
+				headers: {'Authorization': 'Bearer ' + this.props.data.user.token},
+				success: (data) => {
+					console.log(data);
+					this.setState({
+						thread: data
+					});
+					this.scrollToBottom();
+				}
+			});
+		}
+	}
+
+	scrollToBottom() {
+		this.anchor.scrollIntoView({ behavior: 'smooth' });
+	}
+
 	handleChange(event) {
-		this.setState({value: event.target.value});
+		this.setState({messageValue: event.target.value});
+		let message = new Message(this.props.data.user._id, this.props.thread, event.target.value);
 		let data = {
 			'type': 'typing',
-			'payload': {
-				'to': this.toBox.value,
-				'from': this.state.user.name,
-				'message': event.target.value
-			}
+			'payload': message
 		};
-		this.props.ws.send(JSON.stringify(data));
+
+		this.props.data.ws.send(JSON.stringify(data));
 	}
 
 	handleSubmit(event) {
 		// TODO thread sends message
-		this.props.thread.sendMessage(this.state.messgeValue);
+		let message = new Message(this.props.data.user._id, this.props.thread, this.state.messageValue);
+		let data = {
+			'type': 'message',
+			'payload': message
+		};
+		this.props.data.ws.send(JSON.stringify(data));
 		this.setState({messageValue: ''});
 		event.preventDefault();
 	}
 
 	render() {
-		let listItems = this.props.thread.messages.map((message, idx) =>
-			<li key={idx}><UserLabel lookup={this.props.lookup} ids={[message.sender]} />: {message.content}</li>
-		);
+		if(this.state.thread) {
+			let listItems = this.state.thread.messages.map((message, idx) => {
+				var style = {};
+				if(message.sender == this.props.data.user._id) {
+					style.backgroundColor = '#b5c1c9';
+					style.float = 'right';
+					//style.textAlign = 'right';
+				}
+				return (
+					<div className="messageRow" key={idx}>
+						<MessageBubble
+							style={style}
+							className="messageBubble"
+							sender={<UserLabel lookup={this.props.data.lookup} ids={[message.sender]} />}
+							content={message.content} />
+					</div>
+				);
+			}
+			);
 
-		console.log(this.props.thread.messages, listItems);
+			let typing = () => {
+				if(this.state.typing == null)
+					return null;
+				else
+					return(
+						<div className="messsageRow">
+							<MessageBubble
+								className="messageBubble animated infinite pulse"
+								sender={<UserLabel lookup={this.props.data.lookup} ids={[this.state.typing.sender]} />}
+								content={this.state.typing.content} />
+						</div>
+					);
+			};
 
-		let typing = (this.props.typing == null) ? null : (<li><i>{this.props.typing.from}: {this.props.typing.message}</i></li>);
+			return (
+				<div className="conversation">
+					<div className="headerRow">
+						<h5>
+							<UserLabel lookup={this.props.data.lookup} ids={this.state.thread.members} />
+						</h5>
+					</div>
 
-		return (
-			<div className="App">
-				<h2><UserLabel lookup={this.props.lookup} ids={this.props.thread.members} /></h2>
+					<div className="mainRow" id="mainRow">
+						{listItems}
+						{typing()}
+						<div ref={(el) => { this.anchor = el; }} style={{ float:'left', clear: 'both' }}></div>
+					</div>
 
-				<ul>
-					{listItems}
-					{typing}
-				</ul>
-
-				<form onSubmit={this.handleSubmit}>
-					<label>
-          Message:
-						<input type="text" value={this.state.value} onChange={this.handleChange} />
-					</label>
-					<input type="submit" value="Send" />
-				</form>
-			</div>
-		);
+					<div className="footerRow">
+						<form onSubmit={this.handleSubmit}>
+							<InputGroup>
+								<Input placeholder="Send a message..." value={this.state.messageValue} onChange={this.handleChange} />
+								<div className="input-group-append">
+									<button className="btn btn-secondary" type="submit">Send</button>
+								</div>
+							</InputGroup>
+						</form>
+					</div>
+				</div>
+			);
+		} else {
+			return <h3>Select a Conversation</h3>;
+		}
 	}
 }

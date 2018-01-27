@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import $ from 'jquery';
+const settings = require('../settings.json');
 
 export class Login extends Component {
 	login(event) {
-		$.post('http://localhost:8080/login', {
+		$.post(settings.serverUrl + '/login', {
 			username: this.username.value,
 			password: this.password.value
 		}, (data) => {
