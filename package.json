@@ -30,5 +30,6 @@
   },
   "config": {
     "deploy": "/Users/sam/Projects/ws-chat-server/client/"
-  }
+  },
+  "homepage": "."
 }
