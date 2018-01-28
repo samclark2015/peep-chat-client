@@ -1,0 +1,29 @@
+.threadboxContainer {
+	display: flex;
+	border-bottom: 1px solid grey;
+	padding: 5px;
+	align-items: center;
+	justify-content: center;
+}
+
+.threadboxContent {
+	cursor: pointer;
+	min-height: 50px;
+	flex-grow: 2;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+}
+
+.threadboxContent > h6 {
+	margin-bottom: 0;
+}
+
+.threadboxDelete {
+	color: lightgrey;
+	cursor: pointer;
+}
+
+.threadboxDelete:hover {
+	color: red;
+}

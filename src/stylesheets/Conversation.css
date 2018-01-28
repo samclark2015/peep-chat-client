@@ -40,6 +40,36 @@
 	border-radius: 10px;
 	margin: 5px 0;
 	float: left;
+	overflow: hidden;
+}
+
+.messageBubble.image {
+	padding: 0 !important;
+	position: relative;
+
+}
+
+.messageBubble.image > img {
+	margin: 0;
+}
+
+.messageBubble.image > .footer {
+	border-bottom-left-radius: 10px;
+	border-bottom-right-radius: 10px;
+	padding: 7px 15px;
+	background-color: rgba(0,0,0,0.60);
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 2;
+
+	color: white;
+	display: none;
+}
+
+.messageBubble.image:hover > .footer {
+	display: block;
 }
 
 .messageBubble:hover {
@@ -49,4 +79,18 @@
 .messageBubble > p {
 	margin-bottom: 0;
 	word-wrap: break-word;
+}
+
+.messageBubble > img {
+	display: block;
+	width: 300px;
+	margin-bottom: 8px;
+}
+
+.popover {
+	max-width: none !important;
+}
+
+.loadingText {
+	margin-top: 50px;
 }

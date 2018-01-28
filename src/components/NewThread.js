@@ -52,7 +52,7 @@ export class NewThread extends Component {
 				<ModalBody>
 					<FormGroup>
 						<Input type="text" name="users" id="UserAddBox" value={this.state.usersValue} onChange={this.handleChange} placeholder="Add some users..." onFocus={this.toggleTooltip.bind(this)} onBlur={this.toggleTooltip.bind(this)}/>
-						<Tooltip placement="right" isOpen={this.state.showTooltip} target="UserAddBox">
+						<Tooltip placement="top" isOpen={this.state.showTooltip} target="UserAddBox">
 							Add users using their @name, separated by spaces.
 						</Tooltip>
 					</FormGroup>

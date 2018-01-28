@@ -11,7 +11,15 @@
 }
 
 .userLandingHeaderRow {
+	display: flex;
 	border-bottom: 1px solid grey;
+	align-items: center;
+	justify-content: center;
+	padding: 15px 15px;
+}
+
+.userLandingHeaderLeft {
+	flex-grow: 2;
 }
 
 .userLandingThreadCol {

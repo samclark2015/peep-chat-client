@@ -8,6 +8,9 @@
     "jquery": "^3.3.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
+    "react-fontawesome": "^1.6.1",
+    "react-giphy-select": "^1.0.3",
+    "react-responsive": "^4.0.3",
     "react-scripts": "1.1.0",
     "react-websocket": "^2.0.0",
     "reactstrap": "^5.0.0-alpha.4",
@@ -17,12 +20,15 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "deploy": "react-scripts build; cp -r ./build/ ../ws-chat-server/client/",
+    "deploy": "node ./scripts/deploy.js",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
     "eslint": "^4.16.0",
     "eslint-plugin-react": "^7.6.0"
+  },
+  "config": {
+    "deploy": "/Users/sam/Projects/ws-chat-server/client/"
   }
 }

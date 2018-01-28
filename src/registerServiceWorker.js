@@ -19,6 +19,17 @@ const isLocalhost = Boolean(
 );
 
 export default function register() {
+	/*if ('serviceWorker' in navigator) {
+		navigator.serviceWorker.register('notifications.js')
+			.then(function(registration) {
+				// Successful registration
+				console.log('Hooray. Registration successful, scope is:', registration.scope);
+			}).catch(function(err) {
+				// Failed registration, service worker won’t be installed
+				console.log('Whoops. Service worker registration failed, error:', err);
+			});
+	}*/
+
 	if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
 		// The URL constructor is available in all browsers that support SW.
 		const publicUrl = new URL(process.env.PUBLIC_URL, window.location);
@@ -33,10 +44,10 @@ export default function register() {
 			const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
 
 			if (isLocalhost) {
-				// This is running on 172.25.245.172. Lets check if a service worker still exists or not.
+				// This is running on localhost. Lets check if a service worker still exists or not.
 				checkValidServiceWorker(swUrl);
 
-				// Add some additional logging to 172.25.245.172, pointing developers to the
+				// Add some additional logging to localhost, pointing developers to the
 				// service worker/PWA documentation.
 				navigator.serviceWorker.ready.then(() => {
 					console.log(

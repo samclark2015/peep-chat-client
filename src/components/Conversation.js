@@ -4,7 +4,9 @@ import React, { Component } from 'react';
 import { UserLabel } from './UserLabel.js';
 import { MessageBubble } from './MessageBubble.js';
 import { Message } from '../classes/Message.js';
-import { InputGroup, InputGroupAddon, Button, Input } from 'reactstrap';
+import { InputGroup, Input, Popover, PopoverHeader, PopoverBody } from 'reactstrap';
+import GiphySelect from 'react-giphy-select';
+import 'react-giphy-select/lib/styles.css';
 import '../stylesheets/Conversation.css';
 import 'animate.css';
 const settings = require('../api-config.js');
@@ -15,26 +17,46 @@ export class Conversation extends Component {
 		this.state = {
 			members: [],
 			messageValue: '',
-			typing: null,
-			thread: null
+			typing: {},
+			thread: null,
+			gifPopover: false
 		};
 
 		this.handleChange = this.handleChange.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
 	}
 
+	componentWillMount() {
+		$.ajax({
+			url: settings.serverUrl + '/secure/threads/'+this.props.thread,
+			headers: {'Authorization': 'Bearer ' + this.props.data.user.token},
+			success: (data) => {
+				this.setState({
+					thread: data
+				});
+				this.scrollToBottom();
+			}
+		});
+	}
+
 	componentDidMount() {
 		// TODO: delete fn on unmount
 		this.props.data.ws.listeners.push((message) => {
 			if(message.type === 'typing' && message.payload.thread === this.props.thread) {
-				if(message.payload.content === '')
-					this.setState({typing: message.null});
-				else
-					this.setState({typing: message.payload});
+				let t = Object.assign({}, this.state.typing);
+				if(message.payload.content === '') {
+					delete t[message.payload.sender._id];
+					this.setState({typing: t});
+				} else {
+					t[message.payload.sender._id] = message.payload;
+					this.setState({typing: t});
+				}
 			} else if(message.type === 'message' && message.payload.thread === this.props.thread) {
 				var thread = Object.assign({}, this.state.thread);
 				thread.messages.push(message.payload);
-				this.setState({typing: null, thread: thread});
+				let t = Object.assign({}, this.state.typing);
+				delete t[message.payload.sender._id];
+				this.setState({typing: t, thread: thread});
 			}
 			this.scrollToBottom();
 		});
@@ -42,16 +64,7 @@ export class Conversation extends Component {
 
 	componentWillReceiveProps(next) {
 		if(next.thread && next.thread !== this.props.thread) {
-			$.ajax({
-				url: settings.serverUrl + '/secure/threads/'+next.thread,
-				headers: {'Authorization': 'Bearer ' + this.props.data.user.token},
-				success: (data) => {
-					this.setState({
-						thread: data
-					});
-					this.scrollToBottom();
-				}
-			});
+			return;
 		}
 	}
 
@@ -62,7 +75,11 @@ export class Conversation extends Component {
 
 	handleChange(event) {
 		this.setState({messageValue: event.target.value});
-		let message = new Message(this.props.data.user._id, this.props.thread, event.target.value);
+		let content = {
+			type: 'text',
+			text: event.target.value
+		};
+		let message = new Message(this.props.data.user._id, this.props.thread, content);
 		let data = {
 			'type': 'typing',
 			'payload': message
@@ -73,18 +90,41 @@ export class Conversation extends Component {
 
 	handleSubmit(event) {
 		// TODO thread sends message
-		let message = new Message(this.props.data.user._id, this.props.thread, this.state.messageValue);
+		if(!(!this.state.messageValue || /^\s*$/.test(this.state.messageValue))) {
+			let content = {
+				type: 'text',
+				text: this.state.messageValue
+			};
+			let message = new Message(this.props.data.user._id, this.props.thread, content);
+			let data = {
+				'type': 'message',
+				'payload': message
+			};
+			this.props.data.ws.send(JSON.stringify(data));
+			this.setState({messageValue: ''});
+		}
+		event.preventDefault();
+	}
+
+	sendGif(url) {
+		let content = {
+			type: 'image',
+			url: url
+		};
+		let message = new Message(this.props.data.user._id, this.props.thread, content);
 		let data = {
 			'type': 'message',
 			'payload': message
 		};
 		this.props.data.ws.send(JSON.stringify(data));
-		this.setState({messageValue: ''});
-		event.preventDefault();
+		this.setState({gifPopover: !this.state.gifPopover});
+		//event.preventDefault();
 	}
 
 	render() {
-		if(this.state.thread) {
+		if(!this.state.thread)
+			return <div></div>;
+		else {
 			let listItems = this.state.thread.messages.map((message, idx) => {
 				var style = {};
 				if(message.sender._id == this.props.data.user._id) {
@@ -92,7 +132,7 @@ export class Conversation extends Component {
 					style.float = 'right';
 				}
 				return (
-					<div className="messageRow" key={idx}>
+					<div className="messageRow" key={message._id}>
 						<MessageBubble
 							style={style}
 							className="messageBubble"
@@ -104,17 +144,17 @@ export class Conversation extends Component {
 			);
 
 			let typing = () => {
-				if(this.state.typing == null)
-					return null;
-				else
+				return Object.values(this.state.typing).map((t, i) => {
 					return(
-						<div className="messsageRow">
+						<div key={i} className="messsageRow">
 							<MessageBubble
 								className="messageBubble animated infinite pulse"
-								sender={this.state.typing.sender.name}
-								content={this.state.typing.content} />
+								sender={t.sender.name}
+								content={t.content} />
 						</div>
 					);
+				});
+
 			};
 
 			let names = this.state.thread.members.map((m) => m.name);
@@ -136,17 +176,29 @@ export class Conversation extends Component {
 					<div className="footerRow">
 						<form onSubmit={this.handleSubmit}>
 							<InputGroup>
+								<div className="input-group-prepend">
+									<button className="btn btn-secondary" id="gifButton" type="button" onClick={()=>{this.setState({gifPopover: !this.state.gifPopover});}}>GIF</button>
+								</div>
 								<Input placeholder="Send a message..." value={this.state.messageValue} onChange={this.handleChange} />
 								<div className="input-group-append">
 									<button className="btn btn-secondary" type="submit">Send</button>
 								</div>
 							</InputGroup>
+							<Popover
+								placement="top"
+								isOpen={this.state.gifPopover}
+								target="gifButton"
+								toggle={()=>{this.setState({gifPopover: !this.state.gifPopover});}}>
+								<PopoverBody>
+									<GiphySelect onEntrySelect={(e) => {console.log(e); this.sendGif(e.images.fixed_width.url);}} />
+								</PopoverBody>
+							</Popover>
 						</form>
 					</div>
 				</div>
 			);
-		} else {
-			return <h3>Select a Conversation</h3>;
+
 		}
+
 	}
 }

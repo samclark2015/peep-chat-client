@@ -29,12 +29,12 @@ export class Threads extends Component {
 			headers: {'Authorization': 'Bearer ' + this.props.token},
 			success: (data) => {
 				this.setState({threads: data});
-				let id = localStorage.getItem('last-thread');
+				/*let id = localStorage.getItem('last-thread');
 				if(id) {
 					this.props.selectThread(id);
 				} else {
 					this.props.selectThread(this.state.threads[0]._id);
-				}
+				}*/
 			}
 		});
 	}
@@ -54,6 +54,17 @@ export class Threads extends Component {
 		this.props.selectThread(id);
 	}
 
+	handleDelete(id) {
+		$.ajax({
+			url: settings.serverUrl + '/secure/threads/'+id,
+			headers: {'Authorization': 'Bearer ' + this.props.token},
+			method: 'DELETE',
+			success: (data) => {
+				this.loadThreads();
+			}
+		});
+	}
+
 	render() {
 		let threads = this.state.threads.map((thread, index) => {
 			let names = thread.members.map((m) => m.name);
@@ -62,7 +73,9 @@ export class Threads extends Component {
 					key={index}
 					onClick={() => this.handleSelect(thread._id)}
 					title={names.join(', ')}
-					subtitle="" />
+					subtitle=""
+					thread={thread}
+					onDelete={this.handleDelete.bind(this)}/>
 			);
 		});
 

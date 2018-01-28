@@ -1,0 +1,26 @@
+.userLandingContainer.mobile {
+}
+
+.userLandingContentRow.mobile {
+	flex-direction: column !important;
+}
+
+.userLandingHeaderRow.mobile {
+	border-bottom: 1px solid grey;
+}
+
+.userLandingThreadCol.mobile {
+	width: 100% !important;
+	height: 100%;
+}
+
+.userLandingConvoCol.mobile {
+	width: 100% !important;
+	height: 100%;
+}
+
+#primaryPane, #secondaryPane {
+	width: 100% !important;
+	height: 100% !important;
+	display: flex !important;
+}

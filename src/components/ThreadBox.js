@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
-
-const divStyle = {
-	cursor: 'pointer',
-	height: '50px',
-	borderBottom: '1px solid grey',
-	padding: '5px'
-};
+import '../stylesheets/ThreadBox.css';
 
 export class ThreadBox extends Component {
+	handleClick() {
+		this.props.onDelete(this.props.thread._id);
+	}
+
 	render() {
 		return (
-			<div style={divStyle} onClick={this.props.onClick}>
-				<h6>{this.props.title}</h6>
-				<p>{this.props.subtitle}</p>
+			<div className="threadboxContainer">
+				<div className="threadboxContent" onClick={this.props.onClick}>
+					<h6>{this.props.title}</h6>
+				</div>
+				<div onClick={this.handleClick.bind(this)}><i className="threadboxDelete fa fa-lg fa-times-circle" /></div>
 			</div>
 		);
 	}
