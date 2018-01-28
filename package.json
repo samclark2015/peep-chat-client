@@ -15,7 +15,9 @@
     "react-websocket": "^2.0.0",
     "reactstrap": "^5.0.0-alpha.4",
     "reconnecting-websocket": "^3.2.2",
-    "ws": "^4.0.0"
+    "ws": "^4.0.0",
+		"eslint": "^4.16.0",
+		"eslint-plugin-react": "^7.6.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -25,8 +27,6 @@
     "eject": "react-scripts eject"
   },
   "devDependencies": {
-    "eslint": "^4.16.0",
-    "eslint-plugin-react": "^7.6.0"
   },
   "config": {
     "deploy": "/Users/sam/Projects/ws-chat-server/client/"
