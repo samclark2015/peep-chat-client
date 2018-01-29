@@ -3,6 +3,8 @@ import runtimeEnv from '@mars/heroku-js-runtime-env';
 let serverUrl, wsUrl;
 const env = runtimeEnv();
 
+console.log(env);
+
 const hostname = window && window.location && window.location.hostname;
 
 if(env.SERVER_URL && env.WS_URL) {
