@@ -1,9 +1,6 @@
-import runtimeEnv from '@mars/heroku-js-runtime-env';
-
 let serverUrl, wsUrl;
-const env = runtimeEnv();
 
-console.log(env);
+let env;
 
 const hostname = window && window.location && window.location.hostname;
 
