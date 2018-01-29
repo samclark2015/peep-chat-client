@@ -1,6 +1,7 @@
 let serverUrl, wsUrl;
 
-let env;
+let env = process.env;
+console.log(env);
 
 const hostname = window && window.location && window.location.hostname;
 
