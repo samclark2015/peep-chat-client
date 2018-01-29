@@ -164,7 +164,6 @@ export class UserLandingMobile extends Component {
 
 
 			let mobileView = () => {
-				console.log('mobile');
 				return (
 					<Switch>
 						<Route exact path="/" component={primary}/>
