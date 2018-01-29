@@ -2,6 +2,7 @@ import '../stylesheets/UserLandingMobile.css';
 import $ from 'jquery';
 import _ from 'lodash';
 import React, { Component } from 'react';
+import MediaQuery from 'react-responsive';
 import { TwoPage } from './TwoPage';
 import { Conversation } from './Conversation.js';
 import { Threads } from './Threads.js';

@@ -38,12 +38,13 @@ class App extends Component {
 		if(this.state.token) {
 			return (
 				<div>
-					<MediaQuery query="(min-device-width: 1024px)">
+					{/*<MediaQuery query="(min-device-width: 1024px)">
 						<UserLanding token={this.state.token} onLogout={this.logout.bind(this)}/>
 					</MediaQuery>
 					<MediaQuery query="(max-device-width: 1024px)">
 						<UserLandingMobile token={this.state.token} onLogout={this.logout.bind(this)}/>
-					</MediaQuery>
+					</MediaQuery>*/}
+					<UserLandingMobile token={this.state.token} onLogout={this.logout.bind(this)}/>
 				</div>
 			);
 		} else {

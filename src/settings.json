@@ -1,4 +1,0 @@
-{
-	"serverUrl": "https://peep-server.herokuapp.com/api",
-	"wsUrl": "wss://peep-server.herokuapp.com/api/ws"
-}

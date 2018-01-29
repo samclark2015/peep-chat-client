@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import React, { Component } from 'react';
+import MediaQuery from 'react-responsive';
 
 const style = {
 	position: 'relative',
@@ -49,6 +50,15 @@ export class TwoPage extends Component {
 			</div>
 		);
 
-		return this.props.showSecondary ? secondary : primary;
+		return (
+			<div id="splitviewContainer">
+				<MediaQuery query="(max-width: 1024px)">
+					{this.props.showSecondary ? secondary : primary}
+				</MediaQuery>
+				<MediaQuery query="(min-width: 1024px)">
+					{primary} {secondary}
+				</MediaQuery>
+			</div>
+		);
 	}
 }

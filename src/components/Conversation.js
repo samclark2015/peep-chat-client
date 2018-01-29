@@ -1,15 +1,14 @@
 import $ from 'jquery';
-import _ from 'lodash';
 import React, { Component } from 'react';
-import { UserLabel } from './UserLabel.js';
 import { MessageBubble } from './MessageBubble.js';
 import { Message } from '../classes/Message.js';
-import { InputGroup, Input, Popover, PopoverHeader, PopoverBody } from 'reactstrap';
+import { InputGroup, Input, Popover, PopoverBody } from 'reactstrap';
 import GiphySelect from 'react-giphy-select';
 import 'react-giphy-select/lib/styles.css';
 import '../stylesheets/Conversation.css';
 import 'animate.css';
 const settings = require('../api-config.js');
+const ResizeSensor = require('css-element-queries/src/ResizeSensor');
 
 export class Conversation extends Component {
 	constructor(props) {
@@ -34,7 +33,6 @@ export class Conversation extends Component {
 				this.setState({
 					thread: data
 				});
-				this.scrollToBottom();
 			}
 		});
 	}
@@ -58,7 +56,6 @@ export class Conversation extends Component {
 				delete t[message.payload.sender._id];
 				this.setState({typing: t, thread: thread});
 			}
-			this.scrollToBottom();
 		});
 	}
 
@@ -66,6 +63,13 @@ export class Conversation extends Component {
 		if(next.thread && next.thread !== this.props.thread) {
 			return;
 		}
+	}
+
+	componentDidUpdate() {
+		let e = $('.mainRowInset');
+		let s = new ResizeSensor(e, () => {
+			this.scrollToBottom();
+		});
 	}
 
 	scrollToBottom() {
@@ -168,9 +172,11 @@ export class Conversation extends Component {
 					</div>
 
 					<div className="mainRow" id="mainRow">
-						{listItems}
-						{typing()}
-						<div ref={(el) => { this.anchor = el; }} style={{ float:'left', clear: 'both' }}></div>
+						<div className="mainRowInset">
+							{listItems}
+							{typing()}
+							<div ref={(el) => { this.anchor = el; }} style={{ float:'left', clear: 'both' }}></div>
+						</div>
 					</div>
 
 					<div className="footerRow">

@@ -13,8 +13,22 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('push', function(e) {
+	let body = 'Notification from Peep';
+	let data = JSON.parse(e.data.text());
+	if(data.type == 'message') {
+		let message = data.payload;
+		switch (message.content.type) {
+		case 'text':
+			body = message.sender.name + ': ' + message.content.text;
+			break;
+		case 'image':
+			body = 'New image from ' + message.sender.name;
+			break;
+
+		}
+	}
 	var options = {
-		body: e.data.text(),
+		body: body,
 		vibrate: [100, 50, 100],
 		data: {
 			dateOfArrival: Date.now(),

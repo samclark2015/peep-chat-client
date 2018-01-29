@@ -19,8 +19,27 @@
 	height: 100%;
 }
 
-#primaryPane, #secondaryPane {
-	width: 100% !important;
-	height: 100% !important;
-	display: flex !important;
+#splitviewContainer {
+	height: 100%;
+}
+
+@media screen and (max-width: 1024px) {
+	#primaryPane, #secondaryPane {
+		width: 100% !important;
+		height: 100% !important;
+		display: flex !important;
+	}
+}
+
+@media screen and (min-width: 1024px) {
+	#primaryPane {
+		width: 30% !important;
+		height: 100% !important;
+		display: flex !important;
+	}
+	#secondaryPane {
+		width: 70% !important;
+		height: 100% !important;
+		display: flex !important;
+	}
 }
