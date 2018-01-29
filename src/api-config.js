@@ -11,8 +11,8 @@ if(env.REACT_APP_SERVER_URL && env.REACT_APP_WS_URL) {
 	serverUrl = env.REACT_APP_SERVER_URL;
 	wsUrl = env.REACT_APP_WS_URL;
 } else {
-	serverUrl = 'http://localhost:8080/api';
-	wsUrl = 'ws://localhost:8080/api/ws';
+	serverUrl = process.env.REACT_APP_SERVER_URL;
+	wsUrl = process.env.REACT_APP_WS_URL;
 }
 
 export { serverUrl, wsUrl };

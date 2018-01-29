@@ -1,14 +1,18 @@
 import React, { Component } from 'react';
+import ImgFallback from 'react-img-fallback';
+import { FormattedTime } from 'react-intl';
+const moment = require('moment');
 
 export class MessageBubble extends Component {
 	render() {
 		let content;
-		switch(this.props.content.type) {
+		let timestamp = moment(this.props.message.timestamp).calendar();
+		switch(this.props.message.content.type) {
 		case 'text':
 			content = (
-				<div style={this.props.style} className={this.props.className}>
-					<b>{this.props.sender}</b>
-					<p >{this.props.content.text}</p>
+				<div title={timestamp} style={this.props.style} className={this.props.className}>
+					<b>{this.props.message.sender.name}</b>
+					<p >{this.props.message.content.text}</p>
 				</div>
 			);
 
@@ -16,11 +20,15 @@ export class MessageBubble extends Component {
 		case 'image':
 			//let style = );
 			content = (
-				<div style={this.props.style} className={this.props.className+' image'}>
+				<div title={timestamp} style={this.props.style} className={this.props.className+' image'}>
 					<div className="footer">
-						<b>{this.props.sender}</b>
+						<b>{this.props.message.sender.name}</b>
 					</div>
-					<img src={this.props.content.url} />
+					<ImgFallback
+						src={this.props.message.content.url}
+						alt="Image Message"
+						fallback="https://www.makeupgeek.com/content/wp-content/themes/makeup-geek/images/placeholder-square.svg">
+					</ImgFallback>
 				</div>
 			);
 			break;

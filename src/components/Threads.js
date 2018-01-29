@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { UserLabel } from './UserLabel.js';
 import { ThreadBox } from './ThreadBox.js';
 import { NewThread } from './NewThread.js';
+import { NavLink } from 'react-router-dom';
 import '../stylesheets/Threads.css';
 const settings = require('../api-config.js');
 
@@ -51,7 +52,8 @@ export class Threads extends Component {
 
 	handleSelect(id) {
 		localStorage.setItem('last-thread', id);
-		this.props.selectThread(id);
+		if(this.props.selectThread)
+			this.props.selectThread(id);
 	}
 
 	handleDelete(id) {
@@ -66,16 +68,17 @@ export class Threads extends Component {
 	}
 
 	render() {
-		let threads = this.state.threads.map((thread, index) => {
+		let threads = this.state.threads.map((thread) => {
 			let names = thread.members.map((m) => m.name);
 			return (
-				<ThreadBox
-					key={index}
-					onClick={() => this.handleSelect(thread._id)}
-					title={names.join(', ')}
-					subtitle=""
-					thread={thread}
-					onDelete={this.handleDelete.bind(this)}/>
+				<NavLink key={thread._id} to={'/threads/'+thread._id}>
+					<ThreadBox
+						onClick={() => this.handleSelect(thread._id)}
+						title={names.join(', ')}
+						subtitle=""
+						thread={thread}
+						onDelete={this.handleDelete.bind(this)}/>
+				</NavLink>
 			);
 		});
 

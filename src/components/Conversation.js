@@ -67,7 +67,11 @@ export class Conversation extends Component {
 
 	componentDidUpdate() {
 		let e = $('.mainRowInset');
-		let s = new ResizeSensor(e, () => {
+		let f = $('.mainRow');
+		new ResizeSensor(e, () => {
+			this.scrollToBottom();
+		});
+		new ResizeSensor(f, () => {
 			this.scrollToBottom();
 		});
 	}
@@ -129,7 +133,7 @@ export class Conversation extends Component {
 		if(!this.state.thread)
 			return <div></div>;
 		else {
-			let listItems = this.state.thread.messages.map((message, idx) => {
+			let listItems = this.state.thread.messages.map((message) => {
 				var style = {};
 				if(message.sender._id == this.props.data.user._id) {
 					style.backgroundColor = '#b5c1c9';
@@ -140,8 +144,7 @@ export class Conversation extends Component {
 						<MessageBubble
 							style={style}
 							className="messageBubble"
-							sender={message.sender.name}
-							content={message.content} />
+							message={message} />
 					</div>
 				);
 			}
@@ -166,9 +169,7 @@ export class Conversation extends Component {
 			return (
 				<div className="conversation">
 					<div className="headerRow">
-						<h5>
-							{names.join(', ')}
-						</h5>
+						To: {names.join(', ')}
 					</div>
 
 					<div className="mainRow" id="mainRow">

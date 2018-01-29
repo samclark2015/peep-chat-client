@@ -21,6 +21,7 @@
 
 #splitviewContainer {
 	height: 100%;
+	display: flex;
 }
 
 @media screen and (max-width: 1024px) {
@@ -28,6 +29,9 @@
 		width: 100% !important;
 		height: 100% !important;
 		display: flex !important;
+	}
+	.userLandingThreadCol {
+		border-right: none !important;
 	}
 }
 
@@ -42,4 +46,5 @@
 		height: 100% !important;
 		display: flex !important;
 	}
+
 }

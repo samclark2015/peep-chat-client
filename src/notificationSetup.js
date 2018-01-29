@@ -16,7 +16,7 @@ export class SWSetup {
 			});
 		}
 
-		return navigator.serviceWorker.register('notificationsSW.js')
+		return navigator.serviceWorker.register('/notificationsSW.js')
 			.then(function(registration) {
 				console.log('Service worker successfully registered.');
 				return registration;
@@ -44,7 +44,7 @@ export class SWSetup {
 	}
 
 	subscribeUserToPush() {
-		return navigator.serviceWorker.register('notificationsSW.js')
+		return navigator.serviceWorker.register('/notificationsSW.js')
 			.then(function(registration) {
 				const subscribeOptions = {
 					userVisibleOnly: true,
