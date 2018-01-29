@@ -4,7 +4,9 @@ const settings = require('../api-config.js');
 
 export class Login extends Component {
 	login(event) {
-		$.post(settings.serverUrl + '/login', {
+		let loginUrl = settings.serverUrl + '/login';
+		console.log(loginUrl);
+		$.post(loginUrl, {
 			username: this.username.value,
 			password: this.password.value
 		}, (data) => {
@@ -15,7 +17,7 @@ export class Login extends Component {
 		event.preventDefault();
 	}
 
-	
+
 
 	render() {
 		return (
