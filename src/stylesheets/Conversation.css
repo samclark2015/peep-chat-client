@@ -13,7 +13,7 @@
 
 .mainRow {
 	overflow: scroll;
-
+	flex-grow: 2;
 }
 
 .mainRowInset {
