@@ -1,12 +1,15 @@
 import $ from 'jquery';
+import _ from 'lodash';
 import React, { Component } from 'react';
 import { MessageBubble } from './MessageBubble.js';
 import { Message } from '../classes/Message.js';
-import { InputGroup, Input, Popover, PopoverBody } from 'reactstrap';
+import { InputGroup, Input, Popover, PopoverBody, Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
 import GiphySelect from 'react-giphy-select';
+import ImageUploader from 'react-images-upload';
 import 'react-giphy-select/lib/styles.css';
 import '../stylesheets/Conversation.css';
 import 'animate.css';
+import Lightbox from 'react-image-lightbox';
 const settings = require('../api-config.js');
 const ResizeSensor = require('css-element-queries/src/ResizeSensor');
 
@@ -18,7 +21,12 @@ export class Conversation extends Component {
 			messageValue: '',
 			typing: {},
 			thread: null,
-			gifPopover: false
+			gifPopover: false,
+			imgModal: false,
+			imageUpload: null,
+			lightboxIdx: 0,
+			showLightbox: false,
+			lightboxImages: []
 		};
 
 		this.handleChange = this.handleChange.bind(this);
@@ -26,12 +34,19 @@ export class Conversation extends Component {
 	}
 
 	componentWillMount() {
+
 		$.ajax({
 			url: settings.serverUrl + '/secure/threads/'+this.props.thread,
 			headers: {'Authorization': 'Bearer ' + this.props.data.user.token},
 			success: (data) => {
+				let images = data.messages.map((message) => {
+					if(message.content.type === 'image') {
+						return message.content.url;
+					}
+				});
 				this.setState({
-					thread: data
+					thread: data,
+					lightboxImages: images
 				});
 			}
 		});
@@ -114,7 +129,39 @@ export class Conversation extends Component {
 		event.preventDefault();
 	}
 
-	sendGif(url) {
+	toggleImgModal() {
+		this.setState({imgModal: !this.state.imgModal});
+	}
+
+	toggleGifPopver() {
+		this.setState({gifPopover: !this.state.gifPopover});
+	}
+
+	uploadImage() {
+		var formData = new FormData();
+		formData.append('image',this.state.imageUpload);
+		$.ajax('https://api.imgur.com/3/image', {
+			method: 'POST',
+			headers: {
+				'Authorization': 'Client-ID a93777040a5bae4'
+			},
+			data: formData,
+			contentType: false,
+			processData: false
+		}).then((data) => {
+			this.sendImage(data.data.link);
+			this.setState({imageUpload: null, imgModal: false});
+		}).catch((err) => {
+			console.error(err);
+			this.setState({imageUpload: null, imgModal: false});
+		});
+	}
+
+	sendGif(data) {
+		this.sendImage(data.images.fixed_width.url);
+	}
+
+	sendImage(url) {
 		let content = {
 			type: 'image',
 			url: url
@@ -125,8 +172,14 @@ export class Conversation extends Component {
 			'payload': message
 		};
 		this.props.data.ws.send(JSON.stringify(data));
-		this.setState({gifPopover: !this.state.gifPopover});
-		//event.preventDefault();
+	}
+
+	handleMessageClick(message) {
+		if(message.content.type === 'image') {
+			let idx = _.findIndex(this.state.lightboxImages, (o) => o === message.content.url);
+			if(idx > -1)
+				this.setState({lightboxIdx: idx, showLightbox: true});
+		}
 	}
 
 	render() {
@@ -144,7 +197,8 @@ export class Conversation extends Component {
 						<MessageBubble
 							style={style}
 							className="messageBubble"
-							message={message} />
+							message={message}
+							onClick={this.handleMessageClick.bind(this)}/>
 					</div>
 				);
 			}
@@ -165,6 +219,28 @@ export class Conversation extends Component {
 
 			let names = this.state.thread.members.map((m) => m.name);
 
+			let lightbox;
+			if (this.state.showLightbox) {
+				lightbox = (
+					<Lightbox
+						mainSrc={this.state.lightboxImages[this.state.lightboxIdx]}
+						nextSrc={this.state.lightboxImages[(this.state.lightboxIdx + 1) % this.state.lightboxImages.length]}
+						prevSrc={this.state.lightboxImages[(this.state.lightboxIdx + this.state.lightboxImages.length - 1) % this.state.lightboxImages.length]}
+						onCloseRequest={() => this.setState({ showLightbox: false })}
+						onMovePrevRequest={() =>
+							this.setState({
+								lightboxIdx: (this.state.lightboxIdx + this.state.lightboxImages.length - 1) % this.state.lightboxImages.length,
+							})
+						}
+						onMoveNextRequest={() =>
+							this.setState({
+								lightboxIdx: (this.state.lightboxIdx + 1) % this.state.lightboxImages.length,
+							})
+						}
+					/>
+				);
+			}
+
 			return (
 				<div className="conversation">
 					<div className="headerRow">
@@ -183,24 +259,39 @@ export class Conversation extends Component {
 						<form onSubmit={this.handleSubmit}>
 							<InputGroup>
 								<div className="input-group-prepend">
-									<button className="btn btn-secondary" id="gifButton" type="button" onClick={()=>{this.setState({gifPopover: !this.state.gifPopover});}}>GIF</button>
+									<button className="btn btn-secondary" id="gifButton" type="button" onClick={this.toggleGifPopver.bind(this)}>GIF</button>
+								</div>
+								<div className="input-group-prepend">
+									<button className="btn btn-secondary" id="imgButton" type="button" onClick={this.toggleImgModal.bind(this)}>IMG</button>
 								</div>
 								<Input placeholder="Send a message..." value={this.state.messageValue} onChange={this.handleChange} />
 								<div className="input-group-append">
 									<button className="btn btn-secondary" type="submit">Send</button>
 								</div>
 							</InputGroup>
+
+							<Modal isOpen={this.state.imgModal} toggle={this.toggleImgModal.bind(this)} className={this.props.className}>
+								<ModalHeader toggle={this.toggleImgModal.bind(this)}>Send Image</ModalHeader>
+								<ModalBody>
+									<input name="image" onChange={(e)=>this.setState({imageUpload: e.target.files[0]})} type="file" />
+								</ModalBody>
+								<ModalFooter>
+									<Button color="success" onClick={this.uploadImage.bind(this)}>Send</Button>
+								</ModalFooter>
+							</Modal>
 							<Popover
 								placement="top"
 								isOpen={this.state.gifPopover}
 								target="gifButton"
-								toggle={()=>{this.setState({gifPopover: !this.state.gifPopover});}}>
+								toggle={this.toggleGifPopver.bind(this)}>
 								<PopoverBody>
-									<GiphySelect onEntrySelect={(e) => {console.log(e); this.sendGif(e.images.fixed_width.url);}} />
+									<GiphySelect onEntrySelect={this.sendGif.bind(this)} />
 								</PopoverBody>
 							</Popover>
+
 						</form>
 					</div>
+					{lightbox}
 				</div>
 			);
 

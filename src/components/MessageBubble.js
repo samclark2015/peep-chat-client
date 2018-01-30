@@ -34,8 +34,12 @@ export class MessageBubble extends Component {
 			break;
 		}
 
+		let style = {};
+		if(this.props.onClick)
+			style.cursor = 'pointer';
+
 		return (
-			<div>{content}</div>
+			<div style={style} onClick={() => this.props.onClick(this.props.message)}>{content}</div>
 		);
 	}
 }
