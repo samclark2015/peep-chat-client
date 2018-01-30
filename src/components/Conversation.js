@@ -151,13 +151,12 @@ export class Conversation extends Component {
 			);
 
 			let typing = () => {
-				return Object.values(this.state.typing).map((t, i) => {
+				return Object.values(this.state.typing).map((message) => {
 					return(
-						<div key={i} className="messsageRow">
+						<div key={'typing_'+message._id} className="messsageRow">
 							<MessageBubble
 								className="messageBubble animated infinite pulse"
-								sender={t.sender.name}
-								content={t.content} />
+								message={message}/>
 						</div>
 					);
 				});

@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link, withRouter } from 'react-router-dom';
 import { UserLanding } from './UserLanding.js';
 import { UserLandingMobile } from './UserLandingMobile.js';
 import { Login } from './Login.js';
@@ -37,7 +37,11 @@ class App extends Component {
 
 	render() {
 		if(this.state.token) {
-			let landing = () => <UserLandingMobile token={this.state.token} onLogout={this.logout.bind(this)}/>;
+			let landing = ({history}) => {
+				let landing = <UserLandingMobile token={this.state.token} onLogout={this.logout.bind(this)} history={history}/>;
+				return landing;
+			};
+
 			return (
 				<Router>
 					<div>

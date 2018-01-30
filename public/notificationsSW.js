@@ -1,4 +1,20 @@
 // TODO add push services
+function messageClient(client, msg){
+	return new Promise(function(resolve, reject){
+		var msg_chan = new MessageChannel();
+
+		msg_chan.port1.onmessage = function(event){
+			if(event.data.error){
+				reject(event.data.error);
+			}else{
+				resolve(event.data);
+			}
+		};
+
+		client.postMessage(msg);
+	});
+}
+
 self.addEventListener('install', function(event) {
 	// The promise that skipWaiting() returns can be safely ignored.
 	self.skipWaiting();
@@ -34,7 +50,8 @@ self.addEventListener('push', function(e) {
 			dateOfArrival: Date.now(),
 			primaryKey: '2',
 			tag: 'renotify',
-			renotify: true
+			renotify: true,
+			data: data
 		}
 	};
 	e.waitUntil(
@@ -43,8 +60,16 @@ self.addEventListener('push', function(e) {
 });
 
 self.addEventListener('notificationclick', function(e) {
-	const clickedNotification = e.notification;
-	clickedNotification.close();
+	const notification = e.notification;
+	notification.close();
+
+	let clientMessage = {
+		type: 'notificationClicked',
+		data: {
+			thread: notification.data.data.payload.thread
+		}
+	};
+
 
 	e.waitUntil(
 		clients.matchAll({
@@ -53,11 +78,12 @@ self.addEventListener('notificationclick', function(e) {
 			.then(function(clientList) {
 				for (var i = 0; i < clientList.length; i++) {
 					var client = clientList[i];
+					messageClient(client, clientMessage);
 					if ('focus' in client)
 						return client.focus();
 				}
 				if (clients.openWindow) {
-					return clients.openWindow(e.currentTarget.location.origin);
+					return clients.openWindow(e.currentTarget.location.origin+'/threads/'+notification.data.data.payload.thread);
 				}
 			})
 	);

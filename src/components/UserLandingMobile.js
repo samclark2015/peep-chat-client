@@ -15,7 +15,6 @@ import { SWSetup } from '../notificationSetup';
 var FontAwesome = require('react-fontawesome');
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
-
 const settings = require('../api-config.js');
 
 export class UserLandingMobile extends Component {
@@ -72,6 +71,16 @@ export class UserLandingMobile extends Component {
 			this.swSetup.registerServiceWorker().then(() => {
 				this.swSetup.askPermission().then((data) => {
 					this.swSetup.subscribeUserToPush().then((subscription) => {
+						navigator.serviceWorker.addEventListener('message', (event) => {
+							if(event.data.type == 'notificationClicked') {
+								this.props.history.push('/threads/'+event.data.data.thread);
+							}
+						});
+
+						let postData = {
+							type: 'webpush',
+							data: subscription
+						};
 						return fetch(
 							settings.serverUrl + '/secure/subscribe',
 							{
@@ -80,14 +89,14 @@ export class UserLandingMobile extends Component {
 									'Content-Type': 'application/json',
 									'Authorization': 'Bearer ' + this.props.token
 								},
-								body: JSON.stringify(subscription)
+								body: JSON.stringify(postData)
 							}).then(function(response) {
 							if (!response.ok) {
 								throw new Error('Bad status code from server.');
 							}
 							return response.json();
 						}).then(function(responseData) {
-							if (!(responseData.data && responseData.data.success)) {
+							if (!(responseData && responseData.success)) {
 								throw new Error('Bad response from server.');
 							}
 						});
