@@ -2,6 +2,7 @@
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+	position: relative;
 }
 
 .headerRow {
@@ -102,4 +103,21 @@
 
 .loadingText {
 	margin-top: 50px;
+}
+
+.scrollButton {
+	position: absolute;
+	height: 30px;
+	width: auto;
+	text-align: center;
+	vertical-align: middle;
+	background-color: #4672ba;
+	color: white;
+	border-radius: 15px;
+	bottom: 75px;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+	cursor: pointer;
 }

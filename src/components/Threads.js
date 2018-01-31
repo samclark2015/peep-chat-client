@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import _ from 'lodash';
 import React, { Component } from 'react';
 import { UserLabel } from './UserLabel.js';
 import { ThreadBox } from './ThreadBox.js';
@@ -15,6 +16,24 @@ export class Threads extends Component {
 			threads: [],
 			showModal: false
 		};
+
+		this.wsListener = this.wsListener.bind(this);
+	}
+
+	wsListener(message) {
+		if(message.type === 'message'){
+			/*let threads = this.state.threads;
+			//console.log(threads);
+			let thread = _.find(threads, {'_id': message.payload.thread});
+			//console.log(thread);
+			//thread.messages.push(message.payload);
+			//_.remove(threads, thread);
+			//threads.push(thread);
+			thread.updatedAt = new Date(Date.now()).toISOString();
+			_.sortBy(threads, ['updatedAt']);
+			this.setState({threads: threads});*/
+			this.loadThreads();
+		}
 	}
 
 	componentWillMount() {
@@ -22,6 +41,11 @@ export class Threads extends Component {
 	}
 
 	componentDidMount() {
+		this.props.ws.listeners.push(this.wsListener);
+	}
+
+	componentWillUnmount() {
+		let d = _.remove(this.props.ws.listeners, (o) => o === this.wsListener);
 	}
 
 	loadThreads() {
@@ -30,12 +54,6 @@ export class Threads extends Component {
 			headers: {'Authorization': 'Bearer ' + this.props.token},
 			success: (data) => {
 				this.setState({threads: data});
-				/*let id = localStorage.getItem('last-thread');
-				if(id) {
-					this.props.selectThread(id);
-				} else {
-					this.props.selectThread(this.state.threads[0]._id);
-				}*/
 			}
 		});
 	}
@@ -47,7 +65,7 @@ export class Threads extends Component {
 
 	createdThread(id) {
 		this.loadThreads();
-		this.props.selectThread(id);
+		this.props.history.push('/threads/'+id);
 	}
 
 	handleSelect(id) {

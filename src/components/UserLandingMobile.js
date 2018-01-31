@@ -157,9 +157,9 @@ export class UserLandingMobile extends Component {
 				lookup: this.lookup
 			};
 
-			let primary = () => (
+			let primary = ({ history }) => (
 				<div className="userLandingThreadCol mobile">
-					<Threads lookup={this.lookup} token={this.props.token} />
+					<Threads lookup={this.lookup} token={this.props.token} ws={this.state.ws} history={history}/>
 				</div>
 			);
 
@@ -185,7 +185,7 @@ export class UserLandingMobile extends Component {
 				return (
 					<div id="splitviewContainer">
 						<div id="primaryPane">
-							<Route path="/" component={primary}/>
+							<Route path="/" render={primary}/>
 						</div>
 						<div id="secondaryPane">
 							<Route path="/threads/:id" component={secondary}/>

@@ -10,6 +10,7 @@ import 'react-giphy-select/lib/styles.css';
 import '../stylesheets/Conversation.css';
 import 'animate.css';
 import Lightbox from 'react-image-lightbox';
+import FontAwesome from 'react-fontawesome';
 const settings = require('../api-config.js');
 const ResizeSensor = require('css-element-queries/src/ResizeSensor');
 
@@ -26,24 +27,47 @@ export class Conversation extends Component {
 			imageUpload: null,
 			lightboxIdx: 0,
 			showLightbox: false,
-			lightboxImages: []
+			lightboxImages: [],
+			showScrollButton: false
 		};
 
 		this.handleChange = this.handleChange.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
+		this.handleWSMesssage = this.handleWSMesssage.bind(this);
+	}
+
+	handleWSMesssage(message) {
+		if(message.type === 'typing' && message.payload.thread === this.props.thread) {
+			let t = Object.assign({}, this.state.typing);
+			if(message.payload.content === '') {
+				delete t[message.payload.sender._id];
+				this.setState({typing: t});
+			} else {
+				t[message.payload.sender._id] = message.payload;
+				this.setState({typing: t});
+			}
+		} else if(message.type === 'message' && message.payload.thread === this.props.thread) {
+			var thread = Object.assign({}, this.state.thread);
+			thread.messages.push(message.payload);
+			let t = Object.assign({}, this.state.typing);
+			delete t[message.payload.sender._id];
+			this.setState({typing: t, thread: thread});
+		}
 	}
 
 	componentWillMount() {
-
 		$.ajax({
 			url: settings.serverUrl + '/secure/threads/'+this.props.thread,
 			headers: {'Authorization': 'Bearer ' + this.props.data.user.token},
 			success: (data) => {
-				let images = data.messages.map((message) => {
-					if(message.content.type === 'image') {
-						return message.content.url;
-					}
-				});
+				let images;
+				if(data) {
+					images = data.messages.map((message) => {
+						if(message.content.type === 'image') {
+							return message.content.url;
+						}
+					});
+				}
 				this.setState({
 					thread: data,
 					lightboxImages: images
@@ -54,24 +78,12 @@ export class Conversation extends Component {
 
 	componentDidMount() {
 		// TODO: delete fn on unmount
-		this.props.data.ws.listeners.push((message) => {
-			if(message.type === 'typing' && message.payload.thread === this.props.thread) {
-				let t = Object.assign({}, this.state.typing);
-				if(message.payload.content === '') {
-					delete t[message.payload.sender._id];
-					this.setState({typing: t});
-				} else {
-					t[message.payload.sender._id] = message.payload;
-					this.setState({typing: t});
-				}
-			} else if(message.type === 'message' && message.payload.thread === this.props.thread) {
-				var thread = Object.assign({}, this.state.thread);
-				thread.messages.push(message.payload);
-				let t = Object.assign({}, this.state.typing);
-				delete t[message.payload.sender._id];
-				this.setState({typing: t, thread: thread});
-			}
-		});
+		this.props.data.ws.listeners.push(this.handleWSMesssage);
+		this.shouldScroll = true;
+	}
+
+	componentWillUnmount() {
+		_.remove(this.props.data.ws.listeners, (o) => o === this.handleWSMesssage);
 	}
 
 	componentWillReceiveProps(next) {
@@ -81,19 +93,24 @@ export class Conversation extends Component {
 	}
 
 	componentDidUpdate() {
-		let e = $('.mainRowInset');
-		let f = $('.mainRow');
-		new ResizeSensor(e, () => {
-			this.scrollToBottom();
-		});
-		new ResizeSensor(f, () => {
-			this.scrollToBottom();
+		let e = $('.mainRow');
+		let f = $('.mainRowInset');
+		e.scroll(() =>{
+			this.shouldScroll = f.height() - (e.scrollTop() + e.height()) <= 1;
 		});
 	}
 
 	scrollToBottom() {
-		if(this.anchor)
-			this.anchor.scrollIntoView({ behavior: 'smooth' });
+		let e = $('.mainRow');
+		if(this.shouldScroll)
+			e.scrollTop(e.prop('scrollHeight') - e.prop('clientHeight'));
+		else
+			this.setState({showScrollButton: true});
+	}
+
+	handleScrollButton() {
+		this.anchor.scrollIntoView({behavior: 'smooth'});
+		this.setState({showScrollButton: false});
 	}
 
 	handleChange(event) {
@@ -198,7 +215,8 @@ export class Conversation extends Component {
 							style={style}
 							className="messageBubble"
 							message={message}
-							onClick={this.handleMessageClick.bind(this)}/>
+							onClick={this.handleMessageClick.bind(this)}
+							onLoad={this.scrollToBottom.bind(this)}/>
 					</div>
 				);
 			}
@@ -247,7 +265,7 @@ export class Conversation extends Component {
 						To: {names.join(', ')}
 					</div>
 
-					<div className="mainRow" id="mainRow">
+					<div className="mainRow" id="mainRow" ref={this.mainRow}>
 						<div className="mainRowInset">
 							{listItems}
 							{typing()}
@@ -292,6 +310,7 @@ export class Conversation extends Component {
 						</form>
 					</div>
 					{lightbox}
+					{ this.state.showScrollButton ? <div onClick={this.handleScrollButton.bind(this)} className="scrollButton">New Messages <FontAwesome name="chevron-down"/></div> : null}
 				</div>
 			);
 
