@@ -14,6 +14,7 @@
 	display: flex;
 	flex-direction: column;
 	justify-content: space-evenly;
+	background-color: #FCFCFC;
 }
 
 .mainRow {
@@ -34,7 +35,7 @@
 .footerRow {
 	min-height: 51px;
 	height: auto;
-	background-color: #fff;
+	background-color: #FCFCFC;
 	padding:5px;
 	border-top: 1px solid grey;
 }
@@ -104,20 +105,39 @@
 .loadingText {
 	margin-top: 50px;
 }
-
+.scrollButton > p {
+	margin: 0;
+}
 .scrollButton {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
 	position: absolute;
-	height: 30px;
-	width: auto;
+	height: 40px;
+	width: 200px;
 	text-align: center;
 	vertical-align: middle;
 	background-color: #4672ba;
 	color: white;
-	border-radius: 15px;
+	border-radius: 20px;
 	bottom: 75px;
 	margin-left: auto;
 	margin-right: auto;
 	left: 0;
 	right: 0;
 	cursor: pointer;
+}
+
+#imageInput {
+	opacity: 0;
+	position: absolute;
+	z-index: -1;
+}
+
+.imageInputLabel {
+	cursor: pointer;
+	height: 50px;
+	width: 50px;
+	background-color: blue;
 }

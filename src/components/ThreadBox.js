@@ -11,6 +11,7 @@ export class ThreadBox extends Component {
 			<div className="threadboxContainer">
 				<div className="threadboxContent" onClick={this.props.onClick}>
 					<h6>{this.props.title}</h6>
+					<p>{this.props.subtitle}</p>
 				</div>
 				<div onClick={this.handleClick.bind(this)}><i className="threadboxDelete fa fa-lg fa-times-circle" /></div>
 			</div>

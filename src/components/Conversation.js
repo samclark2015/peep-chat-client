@@ -200,9 +200,10 @@ export class Conversation extends Component {
 	}
 
 	render() {
-		if(!this.state.thread)
-			return <div></div>;
-		else {
+		let userView = (
+			<div className="loadingView">Loading Conversation...</div>
+		);
+		if(this.state.thread) {
 			let listItems = this.state.thread.messages.map((message) => {
 				var style = {};
 				if(message.sender._id == this.props.data.user._id) {
@@ -259,7 +260,7 @@ export class Conversation extends Component {
 				);
 			}
 
-			return (
+			userView = (
 				<div className="conversation">
 					<div className="headerRow">
 						To: {names.join(', ')}
@@ -291,7 +292,8 @@ export class Conversation extends Component {
 							<Modal isOpen={this.state.imgModal} toggle={this.toggleImgModal.bind(this)} className={this.props.className}>
 								<ModalHeader toggle={this.toggleImgModal.bind(this)}>Send Image</ModalHeader>
 								<ModalBody>
-									<input name="image" onChange={(e)=>this.setState({imageUpload: e.target.files[0]})} type="file" />
+									<label htmlFor="imageInput" className="imageInputLabel">IMG</label>
+									<input id="imageInput" name="image" onChange={(e)=>this.setState({imageUpload: e.target.files[0]})} type="file" />
 								</ModalBody>
 								<ModalFooter>
 									<Button color="success" onClick={this.uploadImage.bind(this)}>Send</Button>
@@ -310,11 +312,10 @@ export class Conversation extends Component {
 						</form>
 					</div>
 					{lightbox}
-					{ this.state.showScrollButton ? <div onClick={this.handleScrollButton.bind(this)} className="scrollButton">New Messages <FontAwesome name="chevron-down"/></div> : null}
+					{ this.state.showScrollButton ? <div onClick={this.handleScrollButton.bind(this)} className="scrollButton"><p>New Messages <FontAwesome name="chevron-down"/></p></div> : null}
 				</div>
 			);
-
 		}
-
+		return userView;
 	}
 }
