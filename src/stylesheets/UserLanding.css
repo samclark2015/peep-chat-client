@@ -12,12 +12,17 @@
 
 .userLandingHeaderRow {
 	display: flex;
-	border-bottom: 1px solid grey;
+	border-bottom: 1px solid lightgrey;
 	align-items: center;
 	justify-content: center;
-	padding: 15px 15px;
+	padding: 7px 15px;
 	color: 	#DC143C;
 	background-color: #FCFCFC;
+}
+
+.userLandingHeaderRow > a {
+	text-decoration: none;
+	color: #DC143C;
 }
 
 .userLandingHeaderLeft {
@@ -26,9 +31,13 @@
 
 .userLandingThreadCol {
 	width: 20%;
-	border-right: 1px solid grey;
+	border-right: 1px solid lightgrey;
 }
 
 .userLandingConvoCol {
 	width: 80%;
+}
+
+.userLandingContentRow > div {
+	height: 100%;
 }

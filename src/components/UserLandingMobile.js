@@ -1,19 +1,15 @@
-/*global device:true*/
-
-import '../stylesheets/UserLandingMobile.css';
-import $ from 'jquery';
-import _ from 'lodash';
 import React, { Component } from 'react';
 import MediaQuery from 'react-responsive';
-import { BrowserRouter as Router, Route, Link, Switch, Redirect } from 'react-router-dom';
-import { TwoPage } from './TwoPage';
-import { Conversation } from './Conversation.js';
+import { Route, Link, Switch } from 'react-router-dom';
+import { Conversation } from './Conversation/Main.js';
 import { Threads } from './Threads.js';
-import { Container, Row, Col } from 'reactstrap';
+import { Settings } from './Settings.js';
 import { UserLookup } from '../classes/UserLookup.js';
-import { SWSetup } from '../notificationSetup';
-var FontAwesome = require('react-fontawesome');
-const ReconnectingWebSocket = require('reconnecting-websocket');
+import { doSetup as notificationSetup } from '../notificationSetup';
+import FontAwesome from 'react-fontawesome';
+import ReconnectingWebSocket from 'reconnecting-websocket';
+import '../stylesheets/UserLanding.css';
+import '../stylesheets/UserLandingMobile.css';
 
 const settings = require('../api-config.js');
 
@@ -26,7 +22,6 @@ export class UserLandingMobile extends Component {
 			ws: null,
 			showSecondary: false
 		};
-		this.swSetup = new SWSetup();
 		this.lookup = new UserLookup(settings.serverUrl + '/secure/users', this.props.token);
 	}
 
@@ -37,67 +32,34 @@ export class UserLandingMobile extends Component {
 				this.setState({user: data});
 			},
 			(err, text) => {
-				this.props.onLogout();
+				this.props.history.push('/logout');
 				console.warn(text);
 			});
 	}
 
 	handleSubscribe() {
-		console.log('Platform: web; Using WebPush.');
-		this.swSetup.registerServiceWorker().then(() => {
-			this.swSetup.askPermission().then((data) => {
-				this.swSetup.subscribeUserToPush().then((subscription) => {
-					navigator.serviceWorker.addEventListener('message', (event) => {
-						if(event.data.type == 'notificationClicked') {
-							this.props.history.push('/threads/'+event.data.data.thread);
-						}
-					});
-
-					let postData = {
-						type: 'webpush',
-						data: subscription
-					};
-					return fetch(
-						settings.serverUrl + '/secure/subscribe',
-						{
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'Authorization': 'Bearer ' + this.props.token
-							},
-							body: JSON.stringify(postData)
-						}).then(function(response) {
-						if (!response.ok) {
-							throw new Error('Bad status code from server.');
-						}
-						return response.json();
-					}).then(function(responseData) {
-						if (!(responseData && responseData.success)) {
-							throw new Error('Bad response from server.');
-						}
-					});
-				});
-			});
-		});
+		notificationSetup(this.props.token, (event) => this.props.history.push('/threads/'+event.data.data.thread));
 	}
 
 	componentDidMount() {
-		let ws = new ReconnectingWebSocket(settings.wsUrl);
-		ws.listeners = [];
-		ws.onopen = this.handleOpen.bind(this);
-		ws.onmessage = this.handleMessage.bind(this);
+		if(this.props.token) {
+			let ws = new ReconnectingWebSocket(settings.wsUrl);
+			ws.listeners = [];
+			ws.onopen = this.handleOpen.bind(this);
+			ws.onmessage = this.handleMessage.bind(this);
 
-		this.handleSubscribe();
+			this.handleSubscribe();
 
-		ws.listeners.push((message) => {
-			if(message.type === 'typing') {
-				return;
-			} else if(message.type === 'message') {
-				return;
-			}
-		});
+			ws.listeners.push((message) => {
+				if(message.type === 'typing') {
+					return;
+				} else if(message.type === 'message') {
+					return;
+				}
+			});
 
-		this.setState({ ws: ws });
+			this.setState({ ws: ws });
+		}
 
 	}
 
@@ -170,31 +132,66 @@ export class UserLandingMobile extends Component {
 				);
 			};
 
+			let dashboard = () => {
+				return (
+					<div>
+						<MediaQuery query="(max-width: 1024px)">
+							<div id="splitviewContainer">
+								{mobileView()}
+							</div>
+						</MediaQuery>
+						<MediaQuery query="(min-width: 1024px)">
+							{desktopView()}
+						</MediaQuery>
+					</div>
+				);
+			};
+
+			let settings = ({history}) => {
+				return <Settings token={this.props.token} history={history} />;
+			};
+
 			userView = (
 				<div className="userLandingContentRow mobile">
-					<MediaQuery query="(max-width: 1024px)">
-						<div id="splitviewContainer">
-							{mobileView()}
-						</div>
-					</MediaQuery>
-					<MediaQuery query="(min-width: 1024px)">
-						{desktopView()}
-					</MediaQuery>
+					<Switch>
+						<Route path="/settings" component={settings} />
+						<Route path="/" render={dashboard} />
+					</Switch>
 				</div>
 			);
 		}
 
-		let backButton = () => <Link to="/"><span style={{marginBottom: 0}} className="float-left align-middle h4"><FontAwesome name='chevron-left' /></span></Link>;
+		let backButton = () => (
+			<Link to="/">
+				<span style={{marginBottom: 0}} className="float-left align-middle h4">
+					<FontAwesome name='chevron-left' />
+				</span>
+			</Link>
+		);
+
+		let settingsButton = () => (
+			<Link to="/settings">
+				<span style={{marginBottom: 0}} className="float-right align-middle h4">
+					<FontAwesome name='cog' />
+				</span>
+			</Link>
+		);
 
 		return(
 			<div className="userLandingContainer mobile">
 				<div className="userLandingHeaderRow mobile text-center" style={{display: 'flex'}}>
 					<MediaQuery query="(max-width: 1024px)">
-						<Route path="/threads/:id" component={backButton}/>
+						<Route path="/(.+)" component={backButton}/>
 					</MediaQuery>
 
 					<span style={{flexGrow: 2}}><h2>Peep</h2></span>
-					<span style={{marginBottom: 0}} className="float-right h4" onClick={() => {this.props.onLogout();}}><FontAwesome name='sign-out' /></span>
+					<MediaQuery query="(max-width: 1024px)">
+						<Route exact path="/" component={settingsButton}/>
+					</MediaQuery>
+					<MediaQuery query="(min-width: 1024px)">
+						<Route path="/" component={settingsButton}/>
+					</MediaQuery>
+
 				</div>
 				{userView}
 			</div>

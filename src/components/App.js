@@ -1,10 +1,7 @@
-import $ from 'jquery';
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Link, withRouter } from 'react-router-dom';
-import { UserLanding } from './UserLanding.js';
+import { BrowserRouter as Router, Route, Switch, Redirect  } from 'react-router-dom';
 import { UserLandingMobile } from './UserLandingMobile.js';
 import { Login } from './Login.js';
-import MediaQuery from 'react-responsive';
 import '../stylesheets/App.css';
 
 class App extends Component {
@@ -13,6 +10,11 @@ class App extends Component {
 		this.state = {
 			token: null
 		};
+
+		this.landingComponent = this.landingComponent.bind(this);
+		this.logoutComponent = this.logoutComponent.bind(this);
+		this.loginComponent = this.loginComponent.bind(this);
+		this.loginSuccess = this.loginSuccess.bind(this);
 	}
 
 	componentWillMount() {
@@ -30,29 +32,30 @@ class App extends Component {
 		this.setState({token: token});
 	}
 
-	logout() {
+	logoutComponent() {
 		localStorage.removeItem('token');
 		this.setState({token: null});
+		return <Redirect to='/login' />;
+	}
+
+	loginComponent({history}) {
+		return <Login token={this.state.token} history={history} onLogin={this.loginSuccess}/>;
+	}
+
+	landingComponent({history}) {
+		return <UserLandingMobile token={this.state.token} history={history}/>;
 	}
 
 	render() {
-		if(this.state.token) {
-			let landing = ({history}) => {
-				let landing = <UserLandingMobile token={this.state.token} onLogout={this.logout.bind(this)} history={history}/>;
-				return landing;
-			};
-
-			return (
-				<Router>
-					<div>
-						<Route path="/" component={landing} />
-					</div>
-				</Router>
-			);
-		} else {
-			return <Login onLogin={this.loginSuccess.bind(this)} />;
-		}
-
+		return (
+			<Router>
+				<Switch>
+					<Route exact path="/login" component={this.loginComponent} />
+					<Route exact path="/logout" component={this.logoutComponent} />
+					<Route path="/" component={this.landingComponent} />
+				</Switch>
+			</Router>
+		);
 	}
 }
 

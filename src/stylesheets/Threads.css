@@ -13,7 +13,16 @@
 .newThread {
 	cursor: pointer;
 	text-align: center;
-	border-top: 1px solid grey;
+	border-top: 1px solid lightgrey;
 	padding: 10px;
 	height: 51px;
+}
+
+.newThread:hover {
+	cursor: pointer;
+	text-align: center;
+	border-top: 1px solid lightgrey;
+	padding: 10px;
+	height: 51px;
+	color: #DC143C;
 }

@@ -1,39 +1,32 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import React, { Component } from 'react';
-import { MessageBubble } from './MessageBubble.js';
-import { Message } from '../classes/Message.js';
-import { InputGroup, Input, Popover, PopoverBody, Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
-import GiphySelect from 'react-giphy-select';
-import ImageUploader from 'react-images-upload';
-import 'react-giphy-select/lib/styles.css';
-import '../stylesheets/Conversation.css';
-import 'animate.css';
+import { MessageBubble } from 'components/Conversation/MessageBubble.js';
+import { Message } from 'classes/Message.js';
+import { Footer } from './Footer.js';
 import Lightbox from 'react-image-lightbox';
 import FontAwesome from 'react-fontawesome';
-const settings = require('../api-config.js');
-const ResizeSensor = require('css-element-queries/src/ResizeSensor');
+import 'stylesheets/Conversation.css';
+import 'animate.css';
+
+const settings = require('api-config.js');
 
 export class Conversation extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			members: [],
-			messageValue: '',
 			typing: {},
 			thread: null,
-			gifPopover: false,
-			imgModal: false,
-			imageUpload: null,
 			lightboxIdx: 0,
 			showLightbox: false,
 			lightboxImages: [],
 			showScrollButton: false
 		};
 
-		this.handleChange = this.handleChange.bind(this);
-		this.handleSubmit = this.handleSubmit.bind(this);
 		this.handleWSMesssage = this.handleWSMesssage.bind(this);
+		this.sendTyping = this.sendTyping.bind(this);
+		this.sendMessage = this.sendMessage.bind(this);
 	}
 
 	handleWSMesssage(message) {
@@ -47,11 +40,15 @@ export class Conversation extends Component {
 				this.setState({typing: t});
 			}
 		} else if(message.type === 'message' && message.payload.thread === this.props.thread) {
+			let images = this.state.lightboxImages.slice();
+			if(message.payload.content.type === 'image') {
+				images.push(message.payload.content.url);
+			}
 			var thread = Object.assign({}, this.state.thread);
 			thread.messages.push(message.payload);
 			let t = Object.assign({}, this.state.typing);
 			delete t[message.payload.sender._id];
-			this.setState({typing: t, thread: thread});
+			this.setState({typing: t, thread: thread, lightboxImages: images});
 		}
 	}
 
@@ -60,11 +57,11 @@ export class Conversation extends Component {
 			url: settings.serverUrl + '/secure/threads/'+this.props.thread,
 			headers: {'Authorization': 'Bearer ' + this.props.data.user.token},
 			success: (data) => {
-				let images;
+				let images = [];
 				if(data) {
-					images = data.messages.map((message) => {
-						if(message.content.type === 'image') {
-							return message.content.url;
+					data.messages.forEach((message) => {
+						if(message.content.type === 'image' && message.content.url) {
+							images.push(message.content.url);
 						}
 					});
 				}
@@ -77,7 +74,6 @@ export class Conversation extends Component {
 	}
 
 	componentDidMount() {
-		// TODO: delete fn on unmount
 		this.props.data.ws.listeners.push(this.handleWSMesssage);
 		this.shouldScroll = true;
 	}
@@ -113,79 +109,19 @@ export class Conversation extends Component {
 		this.setState({showScrollButton: false});
 	}
 
-	handleChange(event) {
-		this.setState({messageValue: event.target.value});
-		let content = {
-			type: 'text',
-			text: event.target.value
-		};
-		let message = new Message(this.props.data.user._id, this.props.thread, content);
-		let data = {
-			'type': 'typing',
-			'payload': message
-		};
-
-		this.props.data.ws.send(JSON.stringify(data));
-	}
-
-	handleSubmit(event) {
-		// TODO thread sends message
-		if(!(!this.state.messageValue || /^\s*$/.test(this.state.messageValue))) {
-			let content = {
-				type: 'text',
-				text: this.state.messageValue
-			};
-			let message = new Message(this.props.data.user._id, this.props.thread, content);
-			let data = {
-				'type': 'message',
-				'payload': message
-			};
-			this.props.data.ws.send(JSON.stringify(data));
-			this.setState({messageValue: ''});
-		}
-		event.preventDefault();
-	}
-
-	toggleImgModal() {
-		this.setState({imgModal: !this.state.imgModal});
-	}
-
-	toggleGifPopver() {
-		this.setState({gifPopover: !this.state.gifPopover});
-	}
-
-	uploadImage() {
-		var formData = new FormData();
-		formData.append('image',this.state.imageUpload);
-		$.ajax('https://api.imgur.com/3/image', {
-			method: 'POST',
-			headers: {
-				'Authorization': 'Client-ID a93777040a5bae4'
-			},
-			data: formData,
-			contentType: false,
-			processData: false
-		}).then((data) => {
-			this.sendImage(data.data.link);
-			this.setState({imageUpload: null, imgModal: false});
-		}).catch((err) => {
-			console.error(err);
-			this.setState({imageUpload: null, imgModal: false});
-		});
-	}
-
-	sendGif(data) {
-		this.sendImage(data.images.fixed_width.url);
-	}
-
-	sendImage(url) {
-		let content = {
-			type: 'image',
-			url: url
-		};
+	sendMessage(content) {
 		let message = new Message(this.props.data.user._id, this.props.thread, content);
 		let data = {
 			'type': 'message',
+			'payload': message
+		};
+		this.props.data.ws.send(JSON.stringify(data));
+	}
+
+	sendTyping(content) {
+		let message = new Message(this.props.data.user._id, this.props.thread, content);
+		let data = {
+			'type': 'typing',
 			'payload': message
 		};
 		this.props.data.ws.send(JSON.stringify(data));
@@ -203,9 +139,12 @@ export class Conversation extends Component {
 		let userView = (
 			<div className="loadingView">Loading Conversation...</div>
 		);
+
 		if(this.state.thread) {
 			let listItems = this.state.thread.messages.map((message) => {
-				var style = {};
+				var style = {}, onClick = null;
+				if(message.content.type == 'image')
+					onClick = this.handleMessageClick.bind(this);
 				if(message.sender._id == this.props.data.user._id) {
 					style.backgroundColor = '#b5c1c9';
 					style.float = 'right';
@@ -216,12 +155,11 @@ export class Conversation extends Component {
 							style={style}
 							className="messageBubble"
 							message={message}
-							onClick={this.handleMessageClick.bind(this)}
+							onClick={onClick}
 							onLoad={this.scrollToBottom.bind(this)}/>
 					</div>
 				);
-			}
-			);
+			});
 
 			let typing = () => {
 				return Object.values(this.state.typing).map((message) => {
@@ -229,11 +167,12 @@ export class Conversation extends Component {
 						<div key={'typing_'+message._id} className="messsageRow">
 							<MessageBubble
 								className="messageBubble animated infinite pulse"
-								message={message}/>
+								message={message}
+								onLoad={this.scrollToBottom.bind(this)}
+							/>
 						</div>
 					);
 				});
-
 			};
 
 			let names = this.state.thread.members.map((m) => m.name);
@@ -255,15 +194,14 @@ export class Conversation extends Component {
 							this.setState({
 								lightboxIdx: (this.state.lightboxIdx + 1) % this.state.lightboxImages.length,
 							})
-						}
-					/>
+						}/>
 				);
 			}
 
 			userView = (
 				<div className="conversation">
 					<div className="headerRow">
-						To: {names.join(', ')}
+						<span>To: {names.join(', ')}</span><i className="fa fa-lg fa-plus-circle" />
 					</div>
 
 					<div className="mainRow" id="mainRow" ref={this.mainRow}>
@@ -274,48 +212,14 @@ export class Conversation extends Component {
 						</div>
 					</div>
 
-					<div className="footerRow">
-						<form onSubmit={this.handleSubmit}>
-							<InputGroup>
-								<div className="input-group-prepend">
-									<button className="btn btn-secondary" id="gifButton" type="button" onClick={this.toggleGifPopver.bind(this)}>GIF</button>
-								</div>
-								<div className="input-group-prepend">
-									<button className="btn btn-secondary" id="imgButton" type="button" onClick={this.toggleImgModal.bind(this)}>IMG</button>
-								</div>
-								<Input placeholder="Send a message..." value={this.state.messageValue} onChange={this.handleChange} />
-								<div className="input-group-append">
-									<button className="btn btn-secondary" type="submit">Send</button>
-								</div>
-							</InputGroup>
+					<Footer onTyping={this.sendTyping} onSend={this.sendMessage} />
 
-							<Modal isOpen={this.state.imgModal} toggle={this.toggleImgModal.bind(this)} className={this.props.className}>
-								<ModalHeader toggle={this.toggleImgModal.bind(this)}>Send Image</ModalHeader>
-								<ModalBody>
-									<label htmlFor="imageInput" className="imageInputLabel">IMG</label>
-									<input id="imageInput" name="image" onChange={(e)=>this.setState({imageUpload: e.target.files[0]})} type="file" />
-								</ModalBody>
-								<ModalFooter>
-									<Button color="success" onClick={this.uploadImage.bind(this)}>Send</Button>
-								</ModalFooter>
-							</Modal>
-							<Popover
-								placement="top"
-								isOpen={this.state.gifPopover}
-								target="gifButton"
-								toggle={this.toggleGifPopver.bind(this)}>
-								<PopoverBody>
-									<GiphySelect onEntrySelect={this.sendGif.bind(this)} />
-								</PopoverBody>
-							</Popover>
-
-						</form>
-					</div>
 					{lightbox}
 					{ this.state.showScrollButton ? <div onClick={this.handleScrollButton.bind(this)} className="scrollButton"><p>New Messages <FontAwesome name="chevron-down"/></p></div> : null}
 				</div>
 			);
 		}
+
 		return userView;
 	}
 }

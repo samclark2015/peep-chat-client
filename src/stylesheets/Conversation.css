@@ -9,17 +9,28 @@
 	background-color: #fff;
 	height: 50px;
 	padding:5px;
-	border-bottom: 1px solid grey;
+	border-bottom: 1px solid lightgrey;
 	min-height: 50px;
 	display: flex;
-	flex-direction: column;
-	justify-content: space-evenly;
+	flex-direction: row;
+	justify-content: left;
+	align-items: center;
 	background-color: #FCFCFC;
+}
+
+.headerRow > .fa {
+	padding: 0 10px;
+	color: lightgrey;
+	cursor: pointer;
+}
+
+.headerRow > .fa:hover {
+	color: #61b7ed;
 }
 
 .mainRow {
 	overflow: scroll;
-	flex-grow: 2;
+	height: 100%;
 }
 
 .mainRowInset {
@@ -33,11 +44,13 @@
 }
 
 .footerRow {
-	min-height: 51px;
-	height: auto;
+	height: 55px;
+	max-height: 150px;
 	background-color: #FCFCFC;
 	padding:5px;
-	border-top: 1px solid grey;
+	border-top: 1px solid lightgrey;
+	display: flex;
+	flex-direction: row;
 }
 
 .messageBox {
@@ -130,14 +143,25 @@
 }
 
 #imageInput {
-	opacity: 0;
-	position: absolute;
-	z-index: -1;
+	display: none;
 }
 
-.imageInputLabel {
-	cursor: pointer;
-	height: 50px;
-	width: 50px;
-	background-color: blue;
+.messageFooterContainer {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	padding: 0 5px !important;
+	flex-grow: 2;
+	overflow: scroll;
+	height: 100%;
+}
+
+.messageTextarea {
+	border: none;
+	width: 100%;
+	height: 100%;
+	outline: none;
+	padding: 0 5px;
+	background-color: transparent;
 }

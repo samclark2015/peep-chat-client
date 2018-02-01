@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import ImgFallback from 'react-img-fallback';
 import Img from 'react-image';
-import { FormattedTime } from 'react-intl';
 const moment = require('moment');
 
 const fallback = 'https://www.makeupgeek.com/content/wp-content/themes/makeup-geek/images/placeholder-square.svg';
@@ -44,12 +42,14 @@ export class MessageBubble extends Component {
 			break;
 		}
 
-		let style = {};
-		if(this.props.onClick)
+		let style = {}, onClick = () => {};
+		if(this.props.onClick) {
+			onClick = this.props.onClick;
 			style.cursor = 'pointer';
+		}
 
 		return (
-			<div style={style} onClick={() => this.props.onClick(this.props.message)}>{content}</div>
+			<div style={style} onClick={() => onClick(this.props.message)}>{content}</div>
 		);
 	}
 }

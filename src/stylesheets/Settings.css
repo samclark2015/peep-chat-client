@@ -1,0 +1,47 @@
+.settingsContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+}
+
+.settingsContent {
+	padding: 20px;
+	text-align: center;
+	padding: 50px;
+	border-radius: 30px;
+	border: 1px solid lightgrey;
+	background-color: #FCFCFC;
+}
+
+.settingsTable {
+	display: flex;
+	margin-bottom: 15px;
+}
+
+.settingsLeft, .settingsRight {
+	flex-grow: 1;
+	padding: 0 10px;
+}
+
+.settingsLeft > span, .settingsRight > .react-toggle {
+	display: block;
+	text-align: right;
+	margin-bottom: 15px;
+}
+
+.settingsContent > h1 {
+	margin-bottom: 20px;
+}
+
+label, .labelText {
+	vertical-align: top;
+	font-weight: normal;
+	margin-bottom: 0;
+	margin-right: 5px;
+}
+
+label {
+	display: inline-block;
+	max-width: 100%;
+}

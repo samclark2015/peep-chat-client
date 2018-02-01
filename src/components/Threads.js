@@ -42,10 +42,9 @@ export class Threads extends Component {
 		$.ajax({
 			url: settings.serverUrl + '/secure/threads',
 			headers: {'Authorization': 'Bearer ' + this.props.token},
-			success: (data) => {
-				this.setState({threads: data});
-			}
-		});
+		})
+			.then((data) => this.setState({threads: data}))
+			.catch((err) => console.warn(err));
 	}
 
 	toggleModal() {
@@ -87,14 +86,13 @@ export class Threads extends Component {
 				if(thread.messages[0])
 					subtitle = (thread.messages[0].content.type == 'text') ? thread.messages[0].content.text : 'Message from '+thread.messages[0].sender.name;
 				return (
-					<NavLink key={thread._id} to={'/threads/'+thread._id}>
-						<ThreadBox
-							onClick={() => this.handleSelect(thread._id)}
-							title={names.join(', ')}
-							subtitle={subtitle}
-							thread={thread}
-							onDelete={this.handleDelete.bind(this)}/>
-					</NavLink>
+					<ThreadBox
+						key={thread._id}
+						id={thread._id}
+						title={names.join(', ')}
+						subtitle={subtitle}
+						thread={thread}
+						onDelete={this.handleDelete.bind(this)}/>
 				);
 			});
 

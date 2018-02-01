@@ -1,6 +1,6 @@
 .threadboxContainer {
 	display: flex;
-	border-bottom: 1px solid grey;
+	border-bottom: 1px solid lightgrey;
 	padding: 15px;
 	align-items: center;
 	justify-content: center;
@@ -8,11 +8,17 @@
 	text-decoration: none;
 }
 
-.threadList > a:hover {
+.threadboxContent > a {
 	text-decoration: none !important;
+	color: black;
+	width: 100%;
 }
 
-
+.threadboxContent > a:hover {
+	text-decoration: none !important;
+	width: 100%;
+	color: #DC143C;
+}
 
 .threadboxContent {
 	cursor: pointer;
@@ -33,5 +39,5 @@
 }
 
 .threadboxDelete:hover {
-	color: red;
+	color: #DC143C;
 }
