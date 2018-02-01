@@ -141,7 +141,8 @@ export class Conversation extends Component {
 		);
 
 		if(this.state.thread) {
-			let listItems = this.state.thread.messages.map((message) => {
+			let messages = this.state.thread.messages.slice().reverse();
+			let listItems = messages.map((message) => {
 				var style = {}, onClick = null;
 				if(message.content.type == 'image')
 					onClick = this.handleMessageClick.bind(this);
@@ -160,6 +161,7 @@ export class Conversation extends Component {
 					</div>
 				);
 			});
+
 
 			let typing = () => {
 				return Object.values(this.state.typing).map((message) => {
