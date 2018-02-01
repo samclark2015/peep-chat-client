@@ -84,7 +84,10 @@ export class Threads extends Component {
 				let names = thread.members.map((m) => m.name);
 				let subtitle = 'No messages';
 				if(thread.messages[0])
-					subtitle = (thread.messages[0].content.type == 'text') ? thread.messages[0].content.text : 'Message from '+thread.messages[0].sender.name;
+					subtitle =
+						thread.messages[0].content.type == 'text' ?
+							thread.messages[0].content.text :
+							'Message from '+thread.messages[0].sender.name;
 				return (
 					<ThreadBox
 						key={thread._id}
