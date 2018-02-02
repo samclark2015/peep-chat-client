@@ -45,7 +45,7 @@ export class Conversation extends Component {
 				images.push(message.payload.content.url);
 			}
 			var thread = Object.assign({}, this.state.thread);
-			thread.messages.push(message.payload);
+			thread.messages.splice(0, 0, message.payload);
 			let t = Object.assign({}, this.state.typing);
 			delete t[message.payload.sender._id];
 			this.setState({typing: t, thread: thread, lightboxImages: images});
