@@ -160,7 +160,13 @@ export class UserLandingMobile extends Component {
 			};
 
 			let dashboard = () => {
-				let firstThreadRoute = '/threads/' + _.head(this.threadStore.data)._id;
+				let firstThread = _.head(this.threadStore.data);
+				let redirect;
+				if(firstThread) {
+					let firstThreadRoute = '/threads/' + firstThread._id;
+					redirect = <Redirect exact from="/" to={firstThreadRoute} />;
+				}
+
 				return (
 					<div>
 						<MediaQuery query="(max-width: 1024px)">
@@ -170,7 +176,7 @@ export class UserLandingMobile extends Component {
 						</MediaQuery>
 						<MediaQuery query="(min-width: 1024px)">
 							<Switch>
-								<Redirect exact from="/" to={firstThreadRoute} />
+								{ redirect }
 								<Route path="/threads/:id" component={desktopView}/>
 							</Switch>
 						</MediaQuery>
