@@ -1,10 +1,9 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import React, { Component } from 'react';
-import { UserLabel } from './UserLabel.js';
 import { ThreadBox } from './ThreadBox.js';
 import { NewThread } from './NewThread.js';
-import { NavLink } from 'react-router-dom';
+import { ThreadStore } from 'classes/ThreadStore';
 import '../stylesheets/Threads.css';
 const settings = require('../api-config.js');
 
@@ -13,38 +12,36 @@ export class Threads extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			threads: null,
+			threads: [],
 			showModal: false
 		};
 
+		this.threadStore = ThreadStore.getInstance();
 		this.wsListener = this.wsListener.bind(this);
+		this.updateThreads = this.updateThreads.bind(this);
 	}
 
 	wsListener(message) {
 		if(message.type === 'message'){
-			this.loadThreads();
+			//this.updateThreads();
 		}
 	}
 
 	componentWillMount() {
-		this.loadThreads();
 	}
 
 	componentDidMount() {
 		this.props.ws.listeners.push(this.wsListener);
+		this.threadStore.addEventListener(this.updateThreads);
 	}
 
 	componentWillUnmount() {
 		_.remove(this.props.ws.listeners, (o) => o === this.wsListener);
+		this.threadStore.removeEventListener(this.updateThreads);
 	}
 
-	loadThreads() {
-		$.ajax({
-			url: settings.serverUrl + '/secure/threads',
-			headers: {'Authorization': 'Bearer ' + this.props.token},
-		})
-			.then((data) => this.setState({threads: data}))
-			.catch((err) => console.warn(err));
+	updateThreads() {
+		this.setState({threads: this.threadStore.data});
 	}
 
 	toggleModal() {
@@ -80,14 +77,16 @@ export class Threads extends Component {
 		);
 
 		if(this.state.threads) {
-			let threads = this.state.threads.map((thread) => {
+			var threads = _.sortBy(this.state.threads, ['updatedAt']).reverse();
+			threads = threads.map((thread) => {
 				let names = thread.members.map((m) => m.name);
 				let subtitle = 'No messages';
-				if(thread.messages[0])
+				let lastMessage = _.last(thread.messages);
+				if(lastMessage)
 					subtitle =
-						thread.messages[0].content.type == 'text' ?
-							thread.messages[0].content.text :
-							'Message from '+thread.messages[0].sender.name;
+						lastMessage.content.type == 'text' ?
+							lastMessage.content.text :
+							'Message from '+lastMessage.sender.name;
 				return (
 					<ThreadBox
 						key={thread._id}

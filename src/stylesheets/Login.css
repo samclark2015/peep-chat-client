@@ -1,11 +1,19 @@
 .loginContainer {
-	height: 100%;
+	height: 100Vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	background-color: white;
 }
 
 .loginContent {
-	height: 50%;
-	width: 50%;
+	width: 400px;
+	border: 1px solid lightgrey;
+	border-radius: 30px;
+	padding: 50px;
+	background-color: #FCFCFC;
+}
+
+.loginContent > h1 {
+	text-align: center;
 }

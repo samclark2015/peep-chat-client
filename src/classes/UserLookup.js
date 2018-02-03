@@ -6,7 +6,6 @@ export class UserLookup {
 		this.token = token;
 		this.store = {};
 	}
-
 	get(id) {
 		let p = new Promise((res, rej) => {
 			if(this.store[id]) {

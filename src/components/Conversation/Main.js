@@ -3,11 +3,14 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 import { MessageBubble } from 'components/Conversation/MessageBubble.js';
 import { Message } from 'classes/Message.js';
+import { Header } from 'components/Conversation/Header';
 import { Footer } from './Footer.js';
+import { ThreadStore } from 'classes/ThreadStore';
 import Lightbox from 'react-image-lightbox';
 import FontAwesome from 'react-fontawesome';
 import 'stylesheets/Conversation.css';
 import 'animate.css';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 const settings = require('api-config.js');
 
@@ -21,12 +24,16 @@ export class Conversation extends Component {
 			lightboxIdx: 0,
 			showLightbox: false,
 			lightboxImages: [],
-			showScrollButton: false
+			showScrollButton: false,
+			showCamera: false
 		};
+
+		this.shouldScroll = true;
 
 		this.handleWSMesssage = this.handleWSMesssage.bind(this);
 		this.sendTyping = this.sendTyping.bind(this);
 		this.sendMessage = this.sendMessage.bind(this);
+		this.updateThread = this.updateThread.bind(this);
 	}
 
 	handleWSMesssage(message) {
@@ -40,46 +47,48 @@ export class Conversation extends Component {
 				this.setState({typing: t});
 			}
 		} else if(message.type === 'message' && message.payload.thread === this.props.thread) {
-			let images = this.state.lightboxImages.slice();
-			if(message.payload.content.type === 'image') {
-				images.push(message.payload.content.url);
-			}
-			var thread = Object.assign({}, this.state.thread);
-			thread.messages.splice(0, 0, message.payload);
 			let t = Object.assign({}, this.state.typing);
 			delete t[message.payload.sender._id];
-			this.setState({typing: t, thread: thread, lightboxImages: images});
+			this.setState({typing: t});
+
+			let thread = _.find(this.threadStore.data, {_id: this.props.thread});
+			thread.messages.push(message.payload);
+			thread.updatedAt = new Date().toISOString();
+			this.threadStore.notifyListeners();
 		}
 	}
 
 	componentWillMount() {
-		$.ajax({
-			url: settings.serverUrl + '/secure/threads/'+this.props.thread,
-			headers: {'Authorization': 'Bearer ' + this.props.data.user.token},
-			success: (data) => {
-				let images = [];
-				if(data) {
-					data.messages.forEach((message) => {
-						if(message.content.type === 'image' && message.content.url) {
-							images.push(message.content.url);
-						}
-					});
+		this.threadStore = ThreadStore.getInstance();
+		this.threadStore.addEventListener(this.updateThread);
+	}
+
+	updateThread() {
+		let thread = _.find(this.threadStore.data, {_id: this.props.thread});
+		let images = [];
+		if(thread) {
+			thread.messages.forEach((message) => {
+				if(message.content.type === 'image' && message.content.url) {
+					images.push(message.content.url);
 				}
-				this.setState({
-					thread: data,
-					lightboxImages: images
-				});
-			}
+			});
+		}
+		this.setState({
+			thread: thread,
+			lightboxImages: images
 		});
 	}
 
 	componentDidMount() {
 		this.props.data.ws.listeners.push(this.handleWSMesssage);
-		this.shouldScroll = true;
+		if(this.state.thread)
+			this.bindScrolling();
+		this.scrollToBottom();
 	}
 
 	componentWillUnmount() {
 		_.remove(this.props.data.ws.listeners, (o) => o === this.handleWSMesssage);
+		this.threadStore.removeEventListener(this.updateThread);
 	}
 
 	componentWillReceiveProps(next) {
@@ -88,11 +97,16 @@ export class Conversation extends Component {
 		}
 	}
 
-	componentDidUpdate() {
+	componentDidUpdate(prevProps, prevState) {
+		if(this.state.thread && !prevState.thread)
+			this.bindScrolling();
+	}
+
+	bindScrolling() {
 		let e = $('.mainRow');
 		let f = $('.mainRowInset');
 		e.scroll(() =>{
-			this.shouldScroll = f.height() - (e.scrollTop() + e.height()) <= 1;
+			this.shouldScroll = f.height() - (e.scrollTop() + e.height()) <= 10;
 		});
 	}
 
@@ -141,8 +155,7 @@ export class Conversation extends Component {
 		);
 
 		if(this.state.thread) {
-			let messages = this.state.thread.messages.slice().reverse();
-			let listItems = messages.map((message) => {
+			let listItems = this.state.thread.messages.map((message) => {
 				var style = {}, onClick = null;
 				if(message.content.type == 'image')
 					onClick = this.handleMessageClick.bind(this);
@@ -177,8 +190,6 @@ export class Conversation extends Component {
 				});
 			};
 
-			let names = this.state.thread.members.map((m) => m.name);
-
 			let lightbox;
 			if (this.state.showLightbox) {
 				lightbox = (
@@ -203,7 +214,10 @@ export class Conversation extends Component {
 			userView = (
 				<div className="conversation">
 					<div className="headerRow">
-						<span>To: {names.join(', ')}</span><i className="fa fa-lg fa-plus-circle" />
+						<Header
+							token={this.props.data.user.token}
+							thread={this.state.thread}
+						/>
 					</div>
 
 					<div className="mainRow" id="mainRow" ref={this.mainRow}>
@@ -216,8 +230,13 @@ export class Conversation extends Component {
 
 					<Footer onTyping={this.sendTyping} onSend={this.sendMessage} />
 
+
 					{lightbox}
-					{ this.state.showScrollButton ? <div onClick={this.handleScrollButton.bind(this)} className="scrollButton"><p>New Messages <FontAwesome name="chevron-down"/></p></div> : null}
+					{ this.state.showScrollButton ?
+						<div onClick={this.handleScrollButton.bind(this)} className="scrollButton">
+							<p>New Messages <FontAwesome name="chevron-down"/></p>
+						</div> :
+						null}
 				</div>
 			);
 		}

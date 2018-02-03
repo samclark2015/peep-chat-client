@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Switch, Redirect  } from 'react-router-dom';
 import { UserLandingMobile } from './UserLandingMobile.js';
@@ -20,6 +21,7 @@ class App extends Component {
 	componentWillMount() {
 		let token = localStorage.getItem('token');
 		if(token) {
+			this.setGlobalToken(token);
 			this.setState({token: token});
 		}
 	}
@@ -29,11 +31,22 @@ class App extends Component {
 
 	loginSuccess(token) {
 		localStorage.setItem('token', token);
+		this.setGlobalToken(token);
 		this.setState({token: token});
+	}
+
+	setGlobalToken(token) {
+		var headers = {};
+		if(token)
+			headers['Authorization'] = 'Bearer '+token;
+		$.ajaxSetup({
+			headers: headers
+		});
 	}
 
 	logoutComponent() {
 		localStorage.removeItem('token');
+		this.setGlobalToken(null);
 		this.setState({token: null});
 		return <Redirect to='/login' />;
 	}

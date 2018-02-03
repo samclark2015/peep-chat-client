@@ -14,6 +14,5 @@ export class Thread {
 	}
 
 	sendMessage(message) {
-
 	}
 }

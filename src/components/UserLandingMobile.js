@@ -1,10 +1,12 @@
+import _ from 'lodash';
 import React, { Component } from 'react';
 import MediaQuery from 'react-responsive';
-import { Route, Link, Switch } from 'react-router-dom';
+import { Route, Link, Switch, Redirect } from 'react-router-dom';
 import { Conversation } from './Conversation/Main.js';
 import { Threads } from './Threads.js';
 import { Settings } from './Settings.js';
-import { UserLookup } from '../classes/UserLookup.js';
+import { ThreadStore } from 'classes/ThreadStore';
+import { UserLookup } from 'classes/UserLookup';
 import { doSetup as notificationSetup } from '../notificationSetup';
 import FontAwesome from 'react-fontawesome';
 import ReconnectingWebSocket from 'reconnecting-websocket';
@@ -22,7 +24,9 @@ export class UserLandingMobile extends Component {
 			ws: null,
 			showSecondary: false
 		};
-		this.lookup = new UserLookup(settings.serverUrl + '/secure/users', this.props.token);
+
+		this.lookup = new UserLookup(settings.serverUrl+'/secure/users', this.props.token);
+		this.handleThreadsUpdate = this.handleThreadsUpdate.bind(this);
 	}
 
 	componentWillMount() {
@@ -35,6 +39,23 @@ export class UserLandingMobile extends Component {
 				this.props.history.push('/logout');
 				console.warn(text);
 			});
+
+		this.threadStore = ThreadStore.getInstance(settings.serverUrl+'/secure/threads', this.props.token);
+		let threads = localStorage.getItem('threads');
+		if(threads) {
+			this.threadStore.data = JSON.parse(threads);
+		}
+
+		this.threadStore.addEventListener(this.handleThreadsUpdate);
+	}
+
+	componentWillUnmount() {
+		this.threadStore.removeEventListener(this.handleThreadsUpdate);
+	}
+
+	handleThreadsUpdate() {
+		let threads = this.threadStore.data;
+		localStorage.setItem('threads', JSON.stringify(threads));
 	}
 
 	handleSubscribe() {
@@ -91,20 +112,26 @@ export class UserLandingMobile extends Component {
 		if(this.state.user && this.state.ws) {
 			let convoData = {
 				ws: this.state.ws,
-				user: this.state.user,
-				lookup: this.lookup
+				user: this.state.user
 			};
 
 			let primary = ({ history }) => (
 				<div className="userLandingThreadCol mobile">
-					<Threads lookup={this.lookup} token={this.props.token} ws={this.state.ws} history={history}/>
+					<Threads
+						ws={this.state.ws}
+						history={history}
+					/>
 				</div>
 			);
 
 			let secondary = ({ match }) => {
 				return (
 					<div className="userLandingConvoCol mobile">
-						<Conversation key={match.params.id} data={convoData} thread={match.params.id} />
+						<Conversation
+							key={match.params.id}
+							data={convoData}
+							thread={match.params.id}
+						/>
 					</div>
 				);
 			};
@@ -133,6 +160,7 @@ export class UserLandingMobile extends Component {
 			};
 
 			let dashboard = () => {
+				let firstThreadRoute = '/threads/' + _.head(this.threadStore.data)._id;
 				return (
 					<div>
 						<MediaQuery query="(max-width: 1024px)">
@@ -141,7 +169,10 @@ export class UserLandingMobile extends Component {
 							</div>
 						</MediaQuery>
 						<MediaQuery query="(min-width: 1024px)">
-							{desktopView()}
+							<Switch>
+								<Redirect exact from="/" to={firstThreadRoute} />
+								<Route path="/threads/:id" component={desktopView}/>
+							</Switch>
 						</MediaQuery>
 					</div>
 				);

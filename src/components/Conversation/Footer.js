@@ -2,6 +2,7 @@ import $ from 'jquery';
 import React, { Component } from 'react';
 import { Popover, PopoverBody } from 'reactstrap';
 import { SendButton } from './SendButton';
+import { Camera } from 'components/Camera';
 import FontAwesome from 'react-fontawesome';
 import GiphySelect from 'react-giphy-select';
 import 'react-giphy-select/lib/styles.css';
@@ -16,7 +17,8 @@ export class Footer extends Component {
 			imageUpload: null,
 			sendEnabled: false,
 			showOptions: false,
-			isSending: false
+			isSending: false,
+			showCamera: false
 		};
 
 		this.toggleGifPopover = this.toggleGifPopover.bind(this);
@@ -28,6 +30,7 @@ export class Footer extends Component {
 		this.handleGifSelect = this.handleGifSelect.bind(this);
 		this.uploadImage = this.uploadImage.bind(this);
 		this.handleKeyPress = this.handleKeyPress.bind(this);
+		this.toggleCamera = this.toggleCamera.bind(this);
 	}
 
 	handleKeyPress(event) {
@@ -110,7 +113,12 @@ export class Footer extends Component {
 
 	toggleImageSelect() {
 		this.setState({showOptions: false});
-		$('#imageInput').trigger('click');
+		$('#imageInput').click();
+	}
+
+	toggleCamera() {
+		this.setState({showOptions: false});
+		this.setState({showCamera: !this.state.showCamera});
 	}
 
 	uploadImage() {
@@ -145,7 +153,9 @@ export class Footer extends Component {
 					/>
 				</div>
 				<SendButton disabled={!this.state.sendEnabled} onClick={this.handleSubmit} isSending={this.state.isSending}/>
+
 				<input id="imageInput" name="image" onChange={this.handleImageSelect} type="file" />
+
 				<Popover
 					placement="auto-start"
 					isOpen={this.state.showPopover}
@@ -155,6 +165,7 @@ export class Footer extends Component {
 						<GiphySelect onEntrySelect={this.handleGifSelect} />
 					</PopoverBody>
 				</Popover>
+
 				<Popover
 					placement="auto-start"
 					isOpen={this.state.showOptions}
@@ -165,6 +176,13 @@ export class Footer extends Component {
 						<button className="btn btn-secondary" id="imgButton" type="button" onClick={this.toggleImageSelect}>IMG</button>
 					</PopoverBody>
 				</Popover>
+
+				{/*this.state.showCamera ?
+					<Camera
+						onClose={this.toggleCamera}
+						onError={() => {this.toggleCamera();}}
+					/> :
+					null*/}
 			</div>
 		);
 	}

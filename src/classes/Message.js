@@ -3,6 +3,6 @@ export class Message {
 		this.sender = sender; // User ID
 		this.thread = thread; // Thread ID
 		this.content = content;
-		this.timestamp = Date.now();
+		this.timestamp = new Date().toISOString();
 	}
 }
