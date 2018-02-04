@@ -1,15 +1,20 @@
 import $ from 'jquery';
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import { BrowserRouter as Router, Route, Switch, Redirect  } from 'react-router-dom';
-import { UserLandingMobile } from './UserLandingMobile.js';
-import { Login } from './Login.js';
+import { UserLanding } from 'components/UserLanding';
+import { UserLookup } from 'classes/UserLookup';
+import { Login } from 'components/Login';
+import { ThreadStore } from 'classes/ThreadStore';
 import '../stylesheets/App.css';
+
+const settings = require('api-config');
 
 class App extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			token: null
+			user: null,
+			isReady: false
 		};
 
 		this.landingComponent = this.landingComponent.bind(this);
@@ -22,17 +27,32 @@ class App extends Component {
 		let token = localStorage.getItem('token');
 		if(token) {
 			this.setGlobalToken(token);
-			this.setState({token: token});
+			this.setupLookup(token);
+		} else {
+			this.setState({isReady: true});
 		}
 	}
 
 	componentDidMount() {
 	}
 
+	setupLookup(token) {
+		this.lookup = new UserLookup(settings.serverUrl+'/secure/users', token);
+		this.lookup.get('me').then(
+			(data) => {
+				data.token = token;
+				ThreadStore.getInstance(settings.serverUrl+'/secure/threads', token);
+				this.setState({user: data, isReady: true});
+			},
+			() => {
+				this.setState({isReady: true});
+			});
+	}
+
 	loginSuccess(token) {
 		localStorage.setItem('token', token);
 		this.setGlobalToken(token);
-		this.setState({token: token});
+		this.setupLookup(token);
 	}
 
 	setGlobalToken(token) {
@@ -45,30 +65,38 @@ class App extends Component {
 	}
 
 	logoutComponent() {
-		localStorage.removeItem('token');
+		localStorage.clear();
 		this.setGlobalToken(null);
-		this.setState({token: null});
+		this.setState({user: null});
 		return <Redirect to='/login' />;
 	}
 
 	loginComponent({history}) {
-		return <Login token={this.state.token} history={history} onLogin={this.loginSuccess}/>;
+		return <Login history={history} onLogin={this.loginSuccess} user={this.state.user}/>;
 	}
 
 	landingComponent({history}) {
-		return <UserLandingMobile token={this.state.token} history={history}/>;
+		return <UserLanding user={this.state.user} history={history}/>;
 	}
 
 	render() {
-		return (
-			<Router>
-				<Switch>
-					<Route exact path="/login" component={this.loginComponent} />
-					<Route exact path="/logout" component={this.logoutComponent} />
-					<Route path="/" component={this.landingComponent} />
-				</Switch>
-			</Router>
-		);
+		if(this.state.isReady) {
+			return (
+				<Router>
+					<Fragment>
+						<Switch>
+							<Route exact path="/login" component={this.loginComponent} />
+							<Route exact path="/logout" component={this.logoutComponent} />
+							{ !this.state.user ? <Redirect to="/logout" /> : null }
+							<Route path="/dashboard" component={this.landingComponent} />
+							{ this.state.user ? <Redirect from="/" to="/dashboard" /> : null}
+						</Switch>
+					</Fragment>
+				</Router>
+			);
+		} else {
+			return null;
+		}
 	}
 }
 

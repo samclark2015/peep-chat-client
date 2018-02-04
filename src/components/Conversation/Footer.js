@@ -2,7 +2,6 @@ import $ from 'jquery';
 import React, { Component } from 'react';
 import { Popover, PopoverBody } from 'reactstrap';
 import { SendButton } from './SendButton';
-import { Camera } from 'components/Camera';
 import FontAwesome from 'react-fontawesome';
 import GiphySelect from 'react-giphy-select';
 import 'react-giphy-select/lib/styles.css';
@@ -17,8 +16,7 @@ export class Footer extends Component {
 			imageUpload: null,
 			sendEnabled: false,
 			showOptions: false,
-			isSending: false,
-			showCamera: false
+			isSending: false
 		};
 
 		this.toggleGifPopover = this.toggleGifPopover.bind(this);
@@ -30,7 +28,6 @@ export class Footer extends Component {
 		this.handleGifSelect = this.handleGifSelect.bind(this);
 		this.uploadImage = this.uploadImage.bind(this);
 		this.handleKeyPress = this.handleKeyPress.bind(this);
-		this.toggleCamera = this.toggleCamera.bind(this);
 	}
 
 	handleKeyPress(event) {
@@ -116,11 +113,6 @@ export class Footer extends Component {
 		$('#imageInput').click();
 	}
 
-	toggleCamera() {
-		this.setState({showOptions: false});
-		this.setState({showCamera: !this.state.showCamera});
-	}
-
 	uploadImage() {
 		var formData = new FormData();
 		formData.append('image',this.state.imageUpload);
@@ -176,13 +168,6 @@ export class Footer extends Component {
 						<button className="btn btn-secondary" id="imgButton" type="button" onClick={this.toggleImageSelect}>IMG</button>
 					</PopoverBody>
 				</Popover>
-
-				{/*this.state.showCamera ?
-					<Camera
-						onClose={this.toggleCamera}
-						onError={() => {this.toggleCamera();}}
-					/> :
-					null*/}
 			</div>
 		);
 	}

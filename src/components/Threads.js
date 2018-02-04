@@ -1,11 +1,10 @@
-import $ from 'jquery';
+//import $ from 'jquery';
 import _ from 'lodash';
 import React, { Component } from 'react';
 import { ThreadBox } from './ThreadBox.js';
 import { NewThread } from './NewThread.js';
 import { ThreadStore } from 'classes/ThreadStore';
 import '../stylesheets/Threads.css';
-const settings = require('../api-config.js');
 
 
 export class Threads extends Component {
@@ -17,26 +16,18 @@ export class Threads extends Component {
 		};
 
 		this.threadStore = ThreadStore.getInstance();
-		this.wsListener = this.wsListener.bind(this);
 		this.updateThreads = this.updateThreads.bind(this);
 	}
 
-	wsListener(message) {
-		if(message.type === 'message'){
-			//this.updateThreads();
-		}
-	}
-
 	componentWillMount() {
-	}
-
-	componentDidMount() {
-		this.props.ws.listeners.push(this.wsListener);
 		this.threadStore.addEventListener(this.updateThreads);
 	}
 
+	componentDidMount() {
+
+	}
+
 	componentWillUnmount() {
-		_.remove(this.props.ws.listeners, (o) => o === this.wsListener);
 		this.threadStore.removeEventListener(this.updateThreads);
 	}
 
@@ -50,8 +41,7 @@ export class Threads extends Component {
 	}
 
 	createdThread(id) {
-		this.loadThreads();
-		this.props.history.push('/threads/'+id);
+		this.props.history.push('/dashboard/threads/'+id);
 	}
 
 	handleSelect(id) {
@@ -61,14 +51,7 @@ export class Threads extends Component {
 	}
 
 	handleDelete(id) {
-		$.ajax({
-			url: settings.serverUrl + '/secure/threads/'+id,
-			headers: {'Authorization': 'Bearer ' + this.props.token},
-			method: 'DELETE',
-			success: () => {
-				this.loadThreads();
-			}
-		});
+		this.threadStore.deleteThread(id);
 	}
 
 	render() {

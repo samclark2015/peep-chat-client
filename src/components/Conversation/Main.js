@@ -12,8 +12,6 @@ import 'stylesheets/Conversation.css';
 import 'animate.css';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 
-const settings = require('api-config.js');
-
 export class Conversation extends Component {
 	constructor(props) {
 		super(props);
@@ -24,8 +22,7 @@ export class Conversation extends Component {
 			lightboxIdx: 0,
 			showLightbox: false,
 			lightboxImages: [],
-			showScrollButton: false,
-			showCamera: false
+			showScrollButton: false
 		};
 
 		this.shouldScroll = true;
@@ -50,11 +47,6 @@ export class Conversation extends Component {
 			let t = Object.assign({}, this.state.typing);
 			delete t[message.payload.sender._id];
 			this.setState({typing: t});
-
-			let thread = _.find(this.threadStore.data, {_id: this.props.thread});
-			thread.messages.push(message.payload);
-			thread.updatedAt = new Date().toISOString();
-			this.threadStore.notifyListeners();
 		}
 	}
 

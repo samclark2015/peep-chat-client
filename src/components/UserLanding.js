@@ -6,7 +6,6 @@ import { Conversation } from './Conversation/Main.js';
 import { Threads } from './Threads.js';
 import { Settings } from './Settings.js';
 import { ThreadStore } from 'classes/ThreadStore';
-import { UserLookup } from 'classes/UserLookup';
 import { doSetup as notificationSetup } from '../notificationSetup';
 import FontAwesome from 'react-fontawesome';
 import ReconnectingWebSocket from 'reconnecting-websocket';
@@ -15,37 +14,23 @@ import '../stylesheets/UserLandingMobile.css';
 
 const settings = require('../api-config.js');
 
-export class UserLandingMobile extends Component {
+export class UserLanding extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			user: null,
-			selectedThread: null,
 			ws: null,
 			showSecondary: false
 		};
 
-		this.lookup = new UserLookup(settings.serverUrl+'/secure/users', this.props.token);
 		this.handleThreadsUpdate = this.handleThreadsUpdate.bind(this);
 	}
 
 	componentWillMount() {
-		this.lookup.get('me').then(
-			(data) => {
-				data.token = this.props.token;
-				this.setState({user: data});
-			},
-			(err, text) => {
-				this.props.history.push('/logout');
-				console.warn(text);
-			});
-
-		this.threadStore = ThreadStore.getInstance(settings.serverUrl+'/secure/threads', this.props.token);
+		this.threadStore = ThreadStore.getInstance();
 		let threads = localStorage.getItem('threads');
 		if(threads) {
 			this.threadStore.data = JSON.parse(threads);
 		}
-
 		this.threadStore.addEventListener(this.handleThreadsUpdate);
 	}
 
@@ -59,11 +44,11 @@ export class UserLandingMobile extends Component {
 	}
 
 	handleSubscribe() {
-		notificationSetup(this.props.token, (event) => this.props.history.push('/threads/'+event.data.data.thread));
+		notificationSetup(this.props.user.token, (event) => this.props.history.push('/dashboard/threads/'+event.data.data.thread));
 	}
 
 	componentDidMount() {
-		if(this.props.token) {
+		if(this.props.user) {
 			let ws = new ReconnectingWebSocket(settings.wsUrl);
 			ws.listeners = [];
 			ws.onopen = this.handleOpen.bind(this);
@@ -78,6 +63,8 @@ export class UserLandingMobile extends Component {
 					return;
 				}
 			});
+
+			ws.listeners.push(this.threadStore.handleWSMesssage);
 
 			this.setState({ ws: ws });
 		}
@@ -95,7 +82,7 @@ export class UserLandingMobile extends Component {
 	handleOpen(event) {
 		let data = {
 			'type': 'signon',
-			'payload': this.props.token
+			'payload': this.props.user.token
 		};
 		this.state.ws.send(JSON.stringify(data));
 		event.preventDefault();
@@ -109,10 +96,10 @@ export class UserLandingMobile extends Component {
 			</div>
 		);
 
-		if(this.state.user && this.state.ws) {
+		if(this.props.user && this.state.ws) {
 			let convoData = {
 				ws: this.state.ws,
-				user: this.state.user
+				user: this.props.user
 			};
 
 			let primary = ({ history }) => (
@@ -141,7 +128,7 @@ export class UserLandingMobile extends Component {
 				return (
 					<Switch>
 						<Route exact path="/" component={primary}/>
-						<Route path="/threads/:id" component={secondary}/>
+						<Route path="/dashboard/threads/:id" component={secondary}/>
 					</Switch>
 				);
 			};
@@ -150,10 +137,10 @@ export class UserLandingMobile extends Component {
 				return (
 					<div id="splitviewContainer">
 						<div id="primaryPane">
-							<Route path="/" render={primary}/>
+							<Route path="/dashboard" render={primary}/>
 						</div>
 						<div id="secondaryPane">
-							<Route path="/threads/:id" component={secondary}/>
+							<Route path="/dashboard/threads/:id" component={secondary}/>
 						</div>
 					</div>
 				);
@@ -163,8 +150,8 @@ export class UserLandingMobile extends Component {
 				let firstThread = _.head(this.threadStore.data);
 				let redirect;
 				if(firstThread) {
-					let firstThreadRoute = '/threads/' + firstThread._id;
-					redirect = <Redirect exact from="/" to={firstThreadRoute} />;
+					let firstThreadRoute = '/dashboard/threads/' + firstThread._id;
+					redirect = <Redirect exact from="/dashboard" to={firstThreadRoute} />;
 				}
 
 				return (
@@ -177,7 +164,7 @@ export class UserLandingMobile extends Component {
 						<MediaQuery query="(min-width: 1024px)">
 							<Switch>
 								{ redirect }
-								<Route path="/threads/:id" component={desktopView}/>
+								<Route path="/dashboard" component={desktopView}/>
 							</Switch>
 						</MediaQuery>
 					</div>
@@ -185,21 +172,21 @@ export class UserLandingMobile extends Component {
 			};
 
 			let settings = ({history}) => {
-				return <Settings token={this.props.token} history={history} />;
+				return <Settings token={this.props.user.token} history={history} />;
 			};
 
 			userView = (
 				<div className="userLandingContentRow mobile">
 					<Switch>
-						<Route path="/settings" component={settings} />
-						<Route path="/" render={dashboard} />
+						<Route path="/dashboard/settings" component={settings} />
+						<Route path="/dashboard" render={dashboard} />
 					</Switch>
 				</div>
 			);
 		}
 
 		let backButton = () => (
-			<Link to="/">
+			<Link to="/dashboard/">
 				<span style={{marginBottom: 0}} className="float-left align-middle h4">
 					<FontAwesome name='chevron-left' />
 				</span>
@@ -207,7 +194,7 @@ export class UserLandingMobile extends Component {
 		);
 
 		let settingsButton = () => (
-			<Link to="/settings">
+			<Link to="/dashboard/settings">
 				<span style={{marginBottom: 0}} className="float-right align-middle h4">
 					<FontAwesome name='cog' />
 				</span>
@@ -218,15 +205,15 @@ export class UserLandingMobile extends Component {
 			<div className="userLandingContainer mobile">
 				<div className="userLandingHeaderRow mobile text-center" style={{display: 'flex'}}>
 					<MediaQuery query="(max-width: 1024px)">
-						<Route path="/(.+)" component={backButton}/>
+						<Route path="/dashboard/(.+)" component={backButton}/>
 					</MediaQuery>
 
 					<span style={{flexGrow: 2}}><h2>Peep</h2></span>
 					<MediaQuery query="(max-width: 1024px)">
-						<Route exact path="/" component={settingsButton}/>
+						<Route exact path="/dashboard" component={settingsButton}/>
 					</MediaQuery>
 					<MediaQuery query="(min-width: 1024px)">
-						<Route path="/" component={settingsButton}/>
+						<Route path="/dashboard" component={settingsButton}/>
 					</MediaQuery>
 
 				</div>

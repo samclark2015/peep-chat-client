@@ -32,7 +32,7 @@ export class ThreadBox extends Component {
 		return (
 			<div className="threadboxContainer">
 				<div className="threadboxContent">
-					<NavLink to={'/threads/'+this.props.id}>
+					<NavLink to={'/dashboard/threads/'+this.props.id}>
 						<h6>{this.props.title}</h6>
 						<p>{this.props.subtitle}</p>
 					</NavLink>

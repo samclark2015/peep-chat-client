@@ -15,6 +15,7 @@ export class DataStore {
 		return $.ajax({
 			url: this.url,
 			headers: {'Authorization': 'Bearer ' + this.token},
+			dataType: 'json'
 		})
 			.then((data) => {
 				this.data = data;
@@ -27,7 +28,7 @@ export class DataStore {
 		fn();
 	}
 	removeEventListener(fn) {
-		_.remove(this._changeListeners, (o) => o === fn);
+		_.remove(this._changeListeners, (o) => o == fn);
 	}
 	notifyListeners() {
 		this._changeListeners.forEach((listener) => {

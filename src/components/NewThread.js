@@ -1,7 +1,6 @@
-import $ from 'jquery';
 import React, { Component } from 'react';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input, Tooltip } from 'reactstrap';
-const settings = require('../api-config.js');
+import { ThreadStore } from 'classes/ThreadStore';
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Input, Tooltip } from 'reactstrap';
 
 export class NewThread extends Component {
 	constructor(props) {
@@ -10,11 +9,11 @@ export class NewThread extends Component {
 			showTooltip: false,
 			usersValue: ''
 		};
-
+		this.threadStore = ThreadStore.getInstance();
 		this.handleChange = this.handleChange.bind(this);
 	}
 
-	toggleTooltip(evt) {
+	toggleTooltip() {
 		let val = !this.state.showTooltip;
 		this.setState({showTooltip: val});
 	}
@@ -26,23 +25,13 @@ export class NewThread extends Component {
 	createThread(){
 		let mentionsRegex = new RegExp('@([a-zA-Z0-9\_\.]+)', 'gim');
 		let text = this.state.usersValue;
-		let matches = text.match(mentionsRegex);
-		let body = {
-			members: matches
-		};
+		let members = text.match(mentionsRegex);
 
-		$.ajax({
-			url: settings.serverUrl + '/secure/threads',
-			method: 'POST',
-			headers: {'Authorization': 'Bearer ' + this.props.token},
-			data: body,
-			success: (data) => {
-				console.log(data);
+		this.threadStore.createThread(members)
+			.then((data) => {
 				this.props.createdThread(data._id);
 				this.props.toggle();
-			}
-		});
-
+			});
 	}
 
 	render() {

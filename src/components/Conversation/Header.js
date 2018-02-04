@@ -29,8 +29,7 @@ export class Header extends Component {
 
 	getUsers(query) {
 		$.ajax({
-			url: settings.serverUrl + '/secure/users?b='+query,
-			headers: {'Authorization': 'Bearer ' + this.props.token},
+			url: settings.serverUrl + '/secure/users?b='+query
 		})
 			.then((data) => {
 				this.setState({options: data, isLoading: false});
@@ -40,20 +39,9 @@ export class Header extends Component {
 	addUsers(e) {
 		e.preventDefault();
 		let usernames = this.state.selected.map((o) => o.username);
-		$.ajax(settings.serverUrl + '/secure/threads/' + this.props.thread._id,
-			{
-				method: 'PUT',
-				data: {
-					members: usernames
-				}
-			})
-			.then((data) => {
+		this.threadStore.addUsers(this.props.thread._id, usernames)
+			.then(() => {
 				this.togglePopover();
-				let thread = _.find(this.threadStore.data, {_id: data._id});
-				if(thread) {
-					thread.members = data.members;
-					this.threadStore.notifyListeners();
-				}
 			});
 	}
 

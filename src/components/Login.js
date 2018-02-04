@@ -38,7 +38,7 @@ export class Login extends Component {
 						<Button>Sign In</Button>
 					</Form>
 				</div>
-				{this.props.token ? <Redirect to="/" /> : null}
+				{this.props.user ? <Redirect to="/" /> : null}
 			</div>
 		);
 	}
