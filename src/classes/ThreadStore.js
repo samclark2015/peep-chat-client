@@ -68,7 +68,6 @@ export class ThreadStore extends DataStore {
 					thread.members = data.members;
 					this.notifyListeners();
 				}
-				console.log(thread);
 				return data;
 			});
 	}
