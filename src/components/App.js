@@ -68,6 +68,7 @@ class App extends Component {
 		localStorage.clear();
 		this.setGlobalToken(null);
 		this.setState({user: null});
+		ThreadStore.reset();
 		return <Redirect to='/login' />;
 	}
 
