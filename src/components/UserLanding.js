@@ -127,7 +127,7 @@ export class UserLanding extends Component {
 			let mobileView = () => {
 				return (
 					<Switch>
-						<Route exact path="/" component={primary}/>
+						<Route exact path="/dashboard" component={primary}/>
 						<Route path="/dashboard/threads/:id" component={secondary}/>
 					</Switch>
 				);
