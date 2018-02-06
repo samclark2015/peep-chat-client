@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import React, { Component } from 'react';
-import { Redirect } from 'react-router-dom';
+import { Redirect, Link } from 'react-router-dom';
 import { Button, Form, FormGroup, Label } from 'reactstrap';
 import 'stylesheets/Login.css';
 const settings = require('api-config.js');
@@ -55,7 +55,10 @@ export class Signup extends Component {
 							<Label for="confirmation">Password Confirmation</Label>
 							<input className="form-control" type="password" name="confirmation" id="confirmation" placeholder="Password" ref={(o) => this.confirmation = o}  />
 						</FormGroup>
-						<Button>Sign Up</Button>
+						<div>
+							<Button>Sign Up</Button>
+							<Link className="pull-right" to="/login">Login</Link>
+						</div>
 					</Form>
 				</div>
 				{this.props.user ? <Redirect to="/dashboard" /> : null}

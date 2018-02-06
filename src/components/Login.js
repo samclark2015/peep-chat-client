@@ -37,8 +37,10 @@ export class Login extends Component {
 							<Label for="password">Password</Label>
 							<input className="form-control" type="password" name="password" id="password" placeholder="Password" ref={(o) => this.password = o}  />
 						</FormGroup>
-						<Button>Sign In</Button>
-						<Link to="/signup">Sign Up</Link>
+						<div>
+							<Button>Login</Button>
+							<Link className="pull-right" to="/signup">Sign Up</Link>
+						</div>
 					</Form>
 				</div>
 				{this.props.user ? <Redirect to="/dashboard" /> : null}
