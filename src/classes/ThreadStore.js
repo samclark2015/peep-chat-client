@@ -90,4 +90,8 @@ export class ThreadStore extends DataStore {
 		}
 	}
 
+	static reset() {
+		ThreadStore._instance = null;
+	}
+
 }
