@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Switch, Redirect  } from 'react-router-
 import { UserLanding } from 'components/UserLanding';
 import { UserLookup } from 'classes/UserLookup';
 import { Login } from 'components/Login';
+import { Signup } from 'components/Signup';
 import { ThreadStore } from 'classes/ThreadStore';
 import '../stylesheets/App.css';
 
@@ -20,6 +21,7 @@ class App extends Component {
 		this.landingComponent = this.landingComponent.bind(this);
 		this.logoutComponent = this.logoutComponent.bind(this);
 		this.loginComponent = this.loginComponent.bind(this);
+		this.signupComponent = this.signupComponent.bind(this);
 		this.loginSuccess = this.loginSuccess.bind(this);
 	}
 
@@ -68,11 +70,16 @@ class App extends Component {
 		localStorage.clear();
 		this.setGlobalToken(null);
 		this.setState({user: null});
+		ThreadStore.reset();
 		return <Redirect to='/login' />;
 	}
 
 	loginComponent({history}) {
 		return <Login history={history} onLogin={this.loginSuccess} user={this.state.user}/>;
+	}
+
+	signupComponent({history}) {
+		return <Signup history={history} onLogin={this.loginSuccess} user={this.state.user}/>;
 	}
 
 	landingComponent({history}) {
@@ -85,6 +92,7 @@ class App extends Component {
 				<Router>
 					<Fragment>
 						<Switch>
+							<Route exact path="/signup" component={this.signupComponent} />
 							<Route exact path="/login" component={this.loginComponent} />
 							<Route exact path="/logout" component={this.logoutComponent} />
 							{ !this.state.user ? <Redirect to="/logout" /> : null }
