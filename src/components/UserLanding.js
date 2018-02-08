@@ -8,17 +8,15 @@ import { Settings } from './Settings.js';
 import { ThreadStore } from 'classes/ThreadStore';
 import { doSetup as notificationSetup } from '../notificationSetup';
 import FontAwesome from 'react-fontawesome';
-import ReconnectingWebSocket from 'reconnecting-websocket';
 import '../stylesheets/UserLanding.css';
 import '../stylesheets/UserLandingMobile.css';
 
-const settings = require('../api-config.js');
+//const settings = require('../api-config.js');
 
 export class UserLanding extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			ws: null,
 			showSecondary: false
 		};
 
@@ -50,45 +48,9 @@ export class UserLanding extends Component {
 	}
 
 	componentDidMount() {
-		if(this.props.user) {
-			let ws = new ReconnectingWebSocket(settings.wsUrl);
-			ws.listeners = [];
-			ws.onopen = this.handleOpen.bind(this);
-			ws.onmessage = this.handleMessage.bind(this);
-
-			this.handleSubscribe();
-
-			ws.listeners.push((message) => {
-				if(message.type === 'typing') {
-					return;
-				} else if(message.type === 'message') {
-					return;
-				}
-			});
-
-			ws.listeners.push(this.threadStore.handleWSMesssage);
-
-			this.setState({ ws: ws });
-		}
-
+		this.handleSubscribe();
 	}
 
-	handleMessage(message) {
-		let data = JSON.parse(message.data);
-		this.state.ws.listeners.forEach((listener) => {
-			listener(data);
-		});
-	}
-
-
-	handleOpen(event) {
-		let data = {
-			'type': 'signon',
-			'payload': this.props.user.token
-		};
-		this.state.ws.send(JSON.stringify(data));
-		event.preventDefault();
-	}
 
 
 	render() {
@@ -98,16 +60,14 @@ export class UserLanding extends Component {
 			</div>
 		);
 
-		if(this.props.user && this.state.ws) {
+		if(this.props.user) {
 			let convoData = {
-				ws: this.state.ws,
 				user: this.props.user
 			};
 
 			let primary = ({ history }) => (
 				<div className="userLandingThreadCol mobile">
 					<Threads
-						ws={this.state.ws}
 						history={history}
 					/>
 				</div>

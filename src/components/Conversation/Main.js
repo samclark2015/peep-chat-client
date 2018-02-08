@@ -16,8 +16,8 @@ export class Conversation extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			currentMessage: null,
 			members: [],
-			typing: {},
 			thread: null,
 			lightboxIdx: 0,
 			showLightbox: false,
@@ -27,27 +27,9 @@ export class Conversation extends Component {
 
 		this.shouldScroll = true;
 
-		this.handleWSMesssage = this.handleWSMesssage.bind(this);
-		this.sendTyping = this.sendTyping.bind(this);
-		this.sendMessage = this.sendMessage.bind(this);
+		this.handleSend = this.handleSend.bind(this);
+		this.handleTyping = this.handleTyping.bind(this);
 		this.updateThread = this.updateThread.bind(this);
-	}
-
-	handleWSMesssage(message) {
-		if(message.type === 'typing' && message.payload.thread === this.props.thread) {
-			let t = Object.assign({}, this.state.typing);
-			if(message.payload.content === '') {
-				delete t[message.payload.sender._id];
-				this.setState({typing: t});
-			} else {
-				t[message.payload.sender._id] = message.payload;
-				this.setState({typing: t});
-			}
-		} else if(message.type === 'message' && message.payload.thread === this.props.thread) {
-			let t = Object.assign({}, this.state.typing);
-			delete t[message.payload.sender._id];
-			this.setState({typing: t});
-		}
 	}
 
 	componentWillMount() {
@@ -65,6 +47,8 @@ export class Conversation extends Component {
 				}
 			});
 		}
+
+		this.threadStore.sendReads(this.props.thread, this.props.data.user._id);
 		this.setState({
 			thread: thread,
 			lightboxImages: images
@@ -72,14 +56,12 @@ export class Conversation extends Component {
 	}
 
 	componentDidMount() {
-		this.props.data.ws.listeners.push(this.handleWSMesssage);
 		if(this.state.thread)
 			this.bindScrolling();
 		this.scrollToBottom();
 	}
 
 	componentWillUnmount() {
-		_.remove(this.props.data.ws.listeners, (o) => o === this.handleWSMesssage);
 		this.threadStore.removeEventListener(this.updateThread);
 	}
 
@@ -115,22 +97,29 @@ export class Conversation extends Component {
 		this.setState({showScrollButton: false});
 	}
 
-	sendMessage(content) {
-		let message = new Message(this.props.data.user._id, this.props.thread, content);
-		let data = {
-			'type': 'message',
-			'payload': message
-		};
-		this.props.data.ws.send(JSON.stringify(data));
+	handleSend(content) {
+		let message;
+		if(this.state.currentMessage == null) {
+			message = new Message(this.props.data.user._id, this.state.thread._id, content);
+		} else {
+			message = Object.assign({}, this.state.currentMessage);
+			message.content = content;
+		}
+		this.threadStore.sendMessage(message);
+		this.setState({currentMessage: null});
 	}
 
-	sendTyping(content) {
-		let message = new Message(this.props.data.user._id, this.props.thread, content);
-		let data = {
-			'type': 'typing',
-			'payload': message
-		};
-		this.props.data.ws.send(JSON.stringify(data));
+	handleTyping(content) {
+		let message;
+		if(this.state.currentMessage == null) {
+			message = new Message(this.props.data.user._id, this.state.thread._id, content);
+			this.setState({currentMessage: message });
+		} else {
+			message = Object.assign({}, this.state.currentMessage);
+			message.content = content;
+			this.setState({currentMessage: message });
+		}
+		this.threadStore.sendTyping(message);
 	}
 
 	handleMessageClick(message) {
@@ -159,28 +148,13 @@ export class Conversation extends Component {
 					<div className="messageRow" key={message._id}>
 						<MessageBubble
 							style={style}
-							className="messageBubble"
+							className={'messageBubble' + (message.isTyping ? ' animated infinite pulse' : '')}
 							message={message}
 							onClick={onClick}
 							onLoad={this.scrollToBottom.bind(this)}/>
 					</div>
 				);
 			});
-
-
-			let typing = () => {
-				return Object.values(this.state.typing).map((message) => {
-					return(
-						<div key={'typing_'+message._id} className="messsageRow">
-							<MessageBubble
-								className="messageBubble animated infinite pulse"
-								message={message}
-								onLoad={this.scrollToBottom.bind(this)}
-							/>
-						</div>
-					);
-				});
-			};
 
 			let lightbox;
 			if (this.state.showLightbox) {
@@ -215,12 +189,11 @@ export class Conversation extends Component {
 					<div className="mainRow" id="mainRow" ref={this.mainRow}>
 						<div className="mainRowInset">
 							{listItems}
-							{typing()}
 							<div ref={(el) => { this.anchor = el; }} style={{ float:'left', clear: 'both' }}></div>
 						</div>
 					</div>
 
-					<Footer onTyping={this.sendTyping} onSend={this.sendMessage} />
+					<Footer onTyping={this.handleTyping} onSend={this.handleSend} />
 
 
 					{lightbox}
