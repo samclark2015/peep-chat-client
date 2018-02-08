@@ -13,7 +13,7 @@ export class Settings extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			notifications: null,
+			notifications: localStorage.getItem('notifications') == 'true',
 			mirror: false,
 			password: false
 		};
@@ -25,7 +25,7 @@ export class Settings extends Component {
 	}
 
 	componentWillMount() {
-		var notificationStatus = localStorage.getItem('notifications') == true || false;
+		var notificationStatus = localStorage.getItem('notifications') == 'true';
 		this.setState({notifications: notificationStatus});
 	}
 

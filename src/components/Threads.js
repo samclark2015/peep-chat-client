@@ -45,7 +45,6 @@ export class Threads extends Component {
 	}
 
 	handleSelect(id) {
-		localStorage.setItem('last-thread', id);
 		if(this.props.selectThread)
 			this.props.selectThread(id);
 	}

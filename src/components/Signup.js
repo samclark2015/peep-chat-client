@@ -22,7 +22,7 @@ export class Signup extends Component {
 		};
 		if(creds.password === creds.confirmation) {
 			$.post(url, creds)
-			 	.then((data) => {
+				.then((data) => {
 					this.props.onLogin(data.token);
 				})
 				.catch((err) => {

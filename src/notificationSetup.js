@@ -75,13 +75,13 @@ export function unregister() {
 export function doSetup(token, onClick) {
 	console.log('Platform: web; Using WebPush.');
 	let notifySetting = localStorage.getItem('notifications');
-	if(notifySetting === 'true') {
+	if(notifySetting === 'true' || notifySetting === null) {
 		registerServiceWorker().then(() => {
 			askPermission().then((granted) => {
 				if(!granted) {
 					localStorage.setItem('notifications', 'never');
 				} else {
-					localStorage.setItem('notifications', true);
+					localStorage.setItem('notifications', 'true');
 					subscribeUserToPush().then((subscription) => {
 						navigator.serviceWorker.addEventListener('message', (event) => {
 							if(event.data.type == 'notificationClicked') {

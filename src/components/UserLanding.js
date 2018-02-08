@@ -44,7 +44,9 @@ export class UserLanding extends Component {
 	}
 
 	handleSubscribe() {
-		notificationSetup(this.props.user.token, (event) => this.props.history.push('/dashboard/threads/'+event.data.data.thread));
+		notificationSetup(this.props.user.token,
+			(event) => this.props.history.push('/dashboard/threads/'+event.data.data.thread)
+		);
 	}
 
 	componentDidMount() {
@@ -206,6 +208,9 @@ export class UserLanding extends Component {
 				<div className="userLandingHeaderRow mobile text-center" style={{display: 'flex'}}>
 					<MediaQuery query="(max-width: 1024px)">
 						<Route path="/dashboard/(.+)" component={backButton}/>
+					</MediaQuery>
+					<MediaQuery query="(min-width: 1024px)">
+						<Route path="/dashboard/settings" component={backButton}/>
 					</MediaQuery>
 
 					<span style={{flexGrow: 2}}><h2>Peep</h2></span>
