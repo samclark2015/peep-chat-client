@@ -32,7 +32,8 @@ export class Threads extends Component {
 	}
 
 	updateThreads() {
-		this.setState({threads: this.threadStore.data});
+		let threads = _.sortBy(this.threadStore.data, (o) => _.tail(o.messages).timestamp);
+		this.setState({threads: threads});
 	}
 
 	toggleModal() {

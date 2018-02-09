@@ -137,15 +137,15 @@ export class Conversation extends Component {
 
 		if(this.state.thread) {
 			let listItems = this.state.thread.messages.map((message) => {
-				var style = {}, onClick = null;
+				var style = {}, rowStyle = {}, onClick = null;
 				if(message.content.type == 'image')
 					onClick = this.handleMessageClick.bind(this);
 				if(message.sender._id == this.props.data.user._id) {
 					style.backgroundColor = '#b5c1c9';
-					style.float = 'right';
+					rowStyle.justifyContent = 'flex-end';
 				}
 				return (
-					<div className="messageRow" key={message._id}>
+					<div className="messageRow" style={rowStyle} key={message._id}>
 						<MessageBubble
 							style={style}
 							className={'messageBubble' + (message.isTyping ? ' animated infinite pulse' : '')}

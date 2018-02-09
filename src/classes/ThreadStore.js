@@ -31,7 +31,9 @@ export class ThreadStore extends DataStore {
 
 
 	handleMessage(message) {
-		if(message.type === 'typing') {
+		if(message.type === 'signon' && message.payload === 'success') {
+			this.wsQueue.start();
+		} else if(message.type === 'typing') {
 			let thread = _.find(this.data, {_id: message.payload.thread});
 			let existingMessage = _.find(thread.messages, {_id: message.payload._id});
 			if(existingMessage) {
@@ -56,6 +58,8 @@ export class ThreadStore extends DataStore {
 				let newMessage = Object.assign({}, message.payload);
 				this.addMessage(newMessage);
 			}
+		} else {
+			console.warn(message);
 		}
 	}
 
@@ -73,6 +77,7 @@ export class ThreadStore extends DataStore {
 			'payload': this.token
 		};
 		this.ws.send(JSON.stringify(data));
+
 		event.preventDefault();
 	}
 
@@ -81,7 +86,9 @@ export class ThreadStore extends DataStore {
 			'type': 'typing',
 			'payload': message
 		};
-		this.ws.send(JSON.stringify(data));
+		this.wsQueue.add(() => {
+			this.ws.send(JSON.stringify(data));
+		});
 	}
 
 	sendMessage(message) {
@@ -89,7 +96,9 @@ export class ThreadStore extends DataStore {
 			'type': 'message',
 			'payload': message
 		};
-		this.ws.send(JSON.stringify(data));
+		this.wsQueue.add(() => {
+			this.ws.send(JSON.stringify(data));
+		});
 	}
 
 	addMessage(message) {
@@ -157,19 +166,25 @@ export class ThreadStore extends DataStore {
 
 	sendReads(threadId, userId) {
 		let thread = _.find(this.data, {_id: threadId});
-		let unreadMessages = _.filter(thread.messages, (message) => !(
-			message.readBy && _.includes(message.readBy, userId)
-		)).map((m) => m._id);
+		if(thread) {
+			let unreadMessages = _.filter(thread.messages, (message) => !(
+				message.seenBy && _.find(message.seenBy, {_id: userId})
+			)).map((m) => m._id);
 
-		let data = {
-			'type': 'read',
-			'payload': {
-				messages: unreadMessages,
-				thread: threadId
+			if(unreadMessages.length > 0) {
+				let data = {
+					'type': 'read',
+					'payload': {
+						messages: unreadMessages,
+						thread: threadId
+					}
+				};
+
+				this.wsQueue.add(() => {
+					this.ws.send(JSON.stringify(data));
+				});
 			}
-		};
-
-		this.ws.send(JSON.stringify(data));
+		}
 	}
 
 	static getInstance(url, token) {

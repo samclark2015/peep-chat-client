@@ -42,6 +42,9 @@ export class MessageBubble extends Component {
 			break;
 		}
 
+		let seenArray = this.props.message.seenBy ? this.props.message.seenBy.map((u) => u.name) : [];
+		let seenString = seenArray.join(', ');
+
 		let style = {}, onClick = () => {};
 		if(this.props.onClick) {
 			onClick = this.props.onClick;
@@ -49,7 +52,10 @@ export class MessageBubble extends Component {
 		}
 
 		return (
-			<div style={style} onClick={() => onClick(this.props.message)}>{content}</div>
+			<div style={style} className="messageContainer" onClick={() => onClick(this.props.message)}>
+				{content}
+				<div className="messageSeenBy">Seen by {seenString}</div>
+			</div>
 		);
 	}
 }

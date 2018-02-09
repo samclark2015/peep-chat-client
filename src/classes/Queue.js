@@ -1,41 +1,32 @@
-export var Queue = (function(){
+export class Queue {
 
-	function Queue() {}
+	constructor(enabled = false) {
+		this.enabled = enabled;
+		this._queue = [];
+	}
 
-	Queue.prototype.running = false;
-
-	Queue.prototype.queue = [];
-
-	Queue.prototype.add_function = function(callback) {
-		var _this = this;
-		//add callback to the queue
-		this.queue.push(function(){
-			var finished = callback();
-			if(typeof finished === 'undefined' || finished) {
-				//  if callback returns `false`, then you have to
-				//  call `next` somewhere in the callback
-				_this.next();
+	add(fn) {
+		this._queue.push(() => {
+			fn();
+			if(this.enabled) {
+				this.next();
 			}
 		});
 
-		if(!this.running) {
-			// if nothing is running, then start the engines!
+		if(this.enabled) {
 			this.next();
 		}
+	}
 
-		return this; // for chaining fun!
-	};
+	start() {
+		this.enabled = true;
+		this.next();
+	}
 
-	Queue.prototype.next = function(){
-		this.running = false;
-		//get the first element off the queue
-		var shift = this.queue.shift();
+	next() {
+		var shift = this._queue.shift();
 		if(shift) {
-			this.running = true;
 			shift();
 		}
-	};
-
-	return Queue;
-
-})();
+	}
+}
